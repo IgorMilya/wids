@@ -2,7 +2,13 @@ use std::process::Command;
 
 pub fn get_stored_profile_auth_encryption(ssid: &str) -> Result<(String, String), String> {
     let output = Command::new("netsh")
-        .args(["wlan", "show", "profile", &format!("name={}", ssid), "key=clear"])
+        .args([
+            "wlan",
+            "show",
+            "profile",
+            &format!("name={}", ssid),
+            "key=clear",
+        ])
         .output()
         .map_err(|e| format!("Failed to read profile details: {}", e))?;
 

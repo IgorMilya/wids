@@ -8,5 +8,5 @@ pub struct WifiNetwork {
     pub(crate) bssid: String,
     pub(crate) signal: String,
     pub(crate) risk: String,
-    pub(crate) is_evil_twin: bool
+    pub(crate) is_evil_twin: bool,
 }

@@ -17,4 +17,8 @@ export const navLink: LinkItemType[] = [
     link: '/whitelist',
     title: 'Whitelist',
   },
+  {
+    link: '/logs',
+    title: 'Logs',
+  },
 ]

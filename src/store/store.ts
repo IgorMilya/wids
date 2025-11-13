@@ -1,10 +1,10 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit'
 
 import { api } from './api'
-import { blacklistReducer } from './reducers'
+import { userReducer } from './reducers'
 
 const rootReducer = combineReducers({
-  blacklist: blacklistReducer,
+  user: userReducer,
   [api.reducerPath]: api.reducer,
 })
 

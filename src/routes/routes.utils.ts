@@ -4,4 +4,7 @@ export const ROUTES ={
   SCANNER: "/scanner",
   BLACKLIST: "/blacklist",
   WHITELIST: "/whitelist",
+  LOGIN: "/login",
+  CREATE_USER: "/create-user",
+  LOGS: "/logs"
 }

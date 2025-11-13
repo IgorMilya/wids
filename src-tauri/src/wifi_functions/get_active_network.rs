@@ -1,7 +1,7 @@
 use crate::structures::WifiNetwork;
+use crate::wifi_functions::parse_active_interface::parse_active_interface;
 use serde::Serialize;
 use std::process::Command;
-use crate::wifi_functions::parse_active_interface::parse_active_interface;
 
 #[derive(Serialize)]
 pub struct ActiveNetwork {

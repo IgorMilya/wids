@@ -12,17 +12,37 @@ pub fn parse_network_scan(output: &str) -> Vec<WifiNetwork> {
     for line in output.lines() {
         let trimmed = line.trim();
         if trimmed.starts_with("SSID") && trimmed.contains(":") {
-            current_ssid = trimmed.splitn(2, ':').nth(1).unwrap_or("").trim().to_string();
+            current_ssid = trimmed
+                .splitn(2, ':')
+                .nth(1)
+                .unwrap_or("")
+                .trim()
+                .to_string();
         } else if trimmed.starts_with("Authentication") {
-            current_auth = trimmed.splitn(2, ':').nth(1).unwrap_or("").trim().to_string();
+            current_auth = trimmed
+                .splitn(2, ':')
+                .nth(1)
+                .unwrap_or("")
+                .trim()
+                .to_string();
         } else if trimmed.starts_with("Encryption") {
-            current_encryption = trimmed.splitn(2, ':').nth(1).unwrap_or("").trim().to_string();
+            current_encryption = trimmed
+                .splitn(2, ':')
+                .nth(1)
+                .unwrap_or("")
+                .trim()
+                .to_string();
         } else if trimmed.starts_with("BSSID") {
             if let Some(network) = current_bssid.take() {
                 networks.push(network);
             }
 
-            let bssid = trimmed.splitn(2, ':').nth(1).unwrap_or("").trim().to_string();
+            let bssid = trimmed
+                .splitn(2, ':')
+                .nth(1)
+                .unwrap_or("")
+                .trim()
+                .to_string();
             current_bssid = Some(WifiNetwork {
                 ssid: current_ssid.clone(),
                 authentication: current_auth.clone(),
@@ -34,7 +54,12 @@ pub fn parse_network_scan(output: &str) -> Vec<WifiNetwork> {
             });
         } else if trimmed.starts_with("Signal") {
             if let Some(network) = current_bssid.as_mut() {
-                network.signal = trimmed.splitn(2, ':').nth(1).unwrap_or("").trim().to_string();
+                network.signal = trimmed
+                    .splitn(2, ':')
+                    .nth(1)
+                    .unwrap_or("")
+                    .trim()
+                    .to_string();
             }
         }
     }
@@ -49,4 +74,3 @@ pub fn parse_network_scan(output: &str) -> Vec<WifiNetwork> {
 
     networks
 }
-

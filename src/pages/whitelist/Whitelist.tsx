@@ -27,7 +27,7 @@ const Whitelist = () => {
     (debouncedSearchTerm || searchDate)
       ? { ssid: debouncedSearchTerm || undefined, date: searchDate || undefined }
       : undefined
-  );
+  )
 
   const onToggle = (index: number) => setOpenIndex(openIndex === index ? null : index)
 

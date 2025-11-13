@@ -1,9 +1,6 @@
-use windows::{
-    Win32::NetworkManagement::WiFi::*,
-    Win32::Foundation::*,
-};
-use std::ptr::{null_mut, null};
 use std::ffi::c_void;
+use std::ptr::{null, null_mut};
+use windows::{Win32::Foundation::*, Win32::NetworkManagement::WiFi::*};
 
 pub fn trigger_scan() {
     unsafe {
@@ -28,14 +25,17 @@ pub fn trigger_scan() {
         let iface_list = &*iface_list_ptr;
         for i in 0..iface_list.dwNumberOfItems {
             let iface_info = iface_list.InterfaceInfo[i as usize];
-            println!("Triggering scan on interface: {:?}", iface_info.strInterfaceDescription);
+            println!(
+                "Triggering scan on interface: {:?}",
+                iface_info.strInterfaceDescription
+            );
 
             let result = WlanScan(
                 client_handle,
                 &iface_info.InterfaceGuid,
-                None,              
-                None,            
-                Some(null()),     
+                None,
+                None,
+                Some(null()),
             );
 
             if result != ERROR_SUCCESS.0 {

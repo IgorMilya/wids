@@ -27,7 +27,7 @@ const Blacklist = () => {
     (debouncedSearchTerm || searchDate)
       ? { ssid: debouncedSearchTerm || undefined, date: searchDate || undefined }
       : undefined
-  );
+  )
   const onToggle = (index: number) => setOpenIndex(openIndex === index ? null : index)
   return (
     <div className="p-5 w-full">

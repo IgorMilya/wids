@@ -1,9 +1,9 @@
+use crate::wifi_functions::get_stored_profile_auth_encryption::get_stored_profile_auth_encryption;
 use std::fs::File;
 use std::io::Write;
 use std::process::Command;
 use std::thread;
 use std::time::Duration;
-use crate::wifi_functions::get_stored_profile_auth_encryption::get_stored_profile_auth_encryption;
 
 #[tauri::command]
 pub fn connect_wifi(
@@ -22,7 +22,6 @@ pub fn connect_wifi(
     let is_known = known_profiles
         .lines()
         .any(|line| line.trim().starts_with("All User Profile") && line.contains(&ssid));
-
 
     if is_known {
         match get_stored_profile_auth_encryption(&ssid) {
@@ -73,7 +72,8 @@ pub fn connect_wifi(
     let profile = if is_open {
         generate_open_profile_xml(&ssid)
     } else {
-        let pass = password.ok_or_else(|| "Password is required for secured networks.".to_string())?;
+        let pass =
+            password.ok_or_else(|| "Password is required for secured networks.".to_string())?;
         generate_profile_xml(&ssid, &pass)
     };
 
