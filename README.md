@@ -65,16 +65,10 @@ There, you can see your active network if you have a connection to wi-fi
 
 ![image](https://github.com/user-attachments/assets/32f34a2c-9ffa-4c73-a45a-732344836a49)
 
-and the scan button. Before clicking on the scan button, unfortunately, you need to first open Windows Wi-Fi Manager by clicking on the wi-fi icon in the bottom right corner and click on the arrow
-
-![image](https://github.com/user-attachments/assets/274613e8-b9a4-4a33-b1f9-79a8f842d36b)
-
-![image](https://github.com/user-attachments/assets/0090afea-82b8-4d0e-9197-cc13a9284d46)
-
-*Due to the limitation of the tool (netsh), it is not possible to scan the network and show everything what you have if you don't refresh the data from Windows Wi-Fi Manager. Netsh command only displays broadcasted SSIDs detected by the Windows WLAN AutoConfig service, and doesn't always include all nearby networks. It relies on Windows’ built-in scan results. Windows may cache scan results and throttle scanning for power and performance. This problem will be fixed using the **"windows"** crate library for Rust.*
+and the scan button. 
 
 Then you can click on the scan button and see all the nearest networks:
 ![image](https://github.com/user-attachments/assets/01efe6ce-417c-44bc-ad48-70ba904d0b24)
-By selecting one spetial network you can connect to it, blacklist or whitelist this network. If you Blacklist this network, this network will never appear on your scan results and will be in Blacklist page. If you Whitelist the network, you will not be able to blacklist and whitelist again and risk will change on WL (Whitelist) 
+By selecting one special network, you can connect to it, blacklist, or whitelist this network. If you Blacklist this network, this network will never appear on your scan results and will be in Blacklist page. If you Whitelist the network, you will not be able to blacklist and whitelist again and risk will change on WL (Whitelist) 
 ![image](https://github.com/user-attachments/assets/44de9866-e1d7-43b2-bf5d-4ce4ec4cd3be)
 Connection to the network takes 5-15 seconds, depending on whether it is a known network and you don't need to enter a password, or an unknown network and you need to enter a password to connect.
