@@ -1,19 +1,21 @@
 import React, { FC, PropsWithChildren } from 'react'
 import { TableHead } from './table-head'
 
-
 interface TableProps extends PropsWithChildren {
   tableTitle: string[];
-  notDataFound?: boolean
+  notDataFound?: boolean;
+  maxH?: string;
+  minH?: string;
+  onSort?: (column: string) => void;
+  sortConfig?: { key: string; direction: 'asc' | 'desc' } | null;
 }
 
-const Table: FC<TableProps> = ({tableTitle, children, notDataFound}) => {
-
+const Table: FC<TableProps> = ({ tableTitle, children, notDataFound, maxH, minH, onSort, sortConfig }) => {
   return (
     <div className="p-4 bg-white rounded-xl text-black">
-      <div className="overflow-x-auto max-h-[400px] min-h-[400px]">
+      <div className={`overflow-x-auto ${maxH ?? 'max-h-[550px]'} ${minH ?? 'min-h-[550px]'}`}>
         <table className="min-w-full table-auto border-collapse">
-          <TableHead tableTitle={tableTitle} />
+          <TableHead tableTitle={tableTitle} onSort={onSort} sortConfig={sortConfig} />
           <tbody className="text-sm">
           {notDataFound && (
             <tr>

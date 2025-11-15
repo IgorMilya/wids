@@ -1,9 +1,10 @@
 import React, { FC, useState } from 'react'
-import { WifiNetworkType } from 'types'
 import { invoke } from '@tauri-apps/api/core'
+import { useAddBlacklistMutation, useAddWhitelistMutation, useAddLogMutation } from 'store/api'
 import { Button, Chip, Modal } from 'UI'
+import { WifiNetworkType } from 'types'
 import { useIsModal } from 'hooks'
-import { useAddBlacklistMutation, useAddWhitelistMutation } from 'store/api'
+import { getNetworkVerdict } from '../scanner.utils'
 
 interface TableScannerProps {
   data: WifiNetworkType,
@@ -18,20 +19,32 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
   const [addBlacklist, { isLoading: isAdding }] = useAddBlacklistMutation()
   const [addWhitelist, { isLoading: isAddingWhitelist }] = useAddWhitelistMutation()
   const [isConnecting, setIsConnecting] = useState(false)
+  const [addLog] = useAddLogMutation()       //  ← LOGGING HERE
+  const { description, verdict } = getNetworkVerdict(data)
 
+  const logAction = (action: string, details?: string) => {
+    addLog({
+      network_ssid: ssid || 'Hidden',
+      network_bssid: bssid || undefined,
+      action,
+      details,
+    })
+  }
   const connectToWifi = async (ssid: string) => {
     setIsConnecting(true)
+      logAction('CONNECT_ATTEMPT', `Trying to connect to ${ssid}`)
     try {
-
       const result = await invoke<string>('connect_wifi', {
         ssid,
         password: null,
         authentication: authentication,
       })
       alert(result)
+      logAction('CONNECTED', `Connected successfully: ${result}`)
       onFetchActiveNetwork()
     } catch (error: any) {
       const errMessage = typeof error === 'string' ? error : error.toString()
+      logAction('CONNECT_FAILED', errMessage)
 
       const shouldPrompt =
         errMessage.includes('Password may have changed') ||
@@ -50,11 +63,13 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
           const retry = await invoke<string>('connect_wifi', {
             ssid,
             password,
-            authentication: authentication
+            authentication: authentication,
           })
           alert(retry)
+          logAction('CONNECTED_RETRY', `Connected after password retry`)
           onFetchActiveNetwork()
         } catch (finalError: any) {
+          logAction('CONNECT_RETRY_FAILED', finalError.toString())
           alert('Still failed to connect: ' + finalError)
         }
       } else {
@@ -67,7 +82,12 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
 
 
   const handleOpenModal = (ssid: string) => {
-    (risk === 'H' || risk === 'C') ? handleToggleIsOpenModal() : connectToWifi(ssid)
+    if (risk === 'H' || risk === 'C') {
+      logAction('CONNECT_RISK_WARNING', `User warned before connecting: risk ${risk}`)
+      handleToggleIsOpenModal()
+    } else {
+      connectToWifi(ssid)
+    }
   }
 
   const handleBlacklist = async (ssid: string, bssid: string) => {
@@ -78,8 +98,10 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
     try {
       const reason = prompt('Enter reason for blacklisting:') || 'Manually added'
       await addBlacklist({ ssid, bssid, reason }).unwrap()
+      logAction('BLACKLIST_ADD', reason)
       alert(`Network ${ssid} has been added to blacklist`)
     } catch (error) {
+      logAction('BLACKLIST_ADD_FAILED', JSON.stringify(error))
       alert('Failed to add network to blacklist: ' + JSON.stringify(error))
     }
   }
@@ -91,8 +113,10 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
     }
     try {
       await addWhitelist({ ssid, bssid }).unwrap()
+      logAction('WHITELIST_ADD', 'Added to whitelist')
       alert(`Network ${ssid} has been added to whitelist`)
     } catch (error) {
+      logAction('WHITELIST_ADD_FAILED', JSON.stringify(error))
       alert('Failed to add network to whitelist: ' + JSON.stringify(error))
     }
   }
@@ -105,7 +129,7 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
           {!ssid ? 'Hidden Network' : (
             <>
               {ssid}
-              {is_evil_twin && risk !== "WL" && <span className="ml-2 text-red-600 font-bold">(Evil Twin)</span>}
+              {is_evil_twin && risk !== 'WL' && <span className="ml-2 text-red-600 font-bold">(Evil Twin)</span>}
             </>
           )}
         </td>
@@ -130,16 +154,20 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
                 >
                   {isConnecting ? 'Connecting...' : 'Connect'}
                 </Button>
-
               </div>
               <div className="w-[150px]">
                 <Button onClick={() => handleBlacklist(ssid, bssid)} variant="red"
-                        disabled={isAdding || risk === "WL"}>Blacklist</Button>
+                        disabled={isAdding || risk === 'WL'}>Blacklist</Button>
               </div>
               <div className="w-[150px]">
                 <Button onClick={() => handleWhitelist(ssid, bssid)} variant="primary"
-                        disabled={isAddingWhitelist || risk === "WL"}>Whitelist</Button>
+                        disabled={isAddingWhitelist || risk === 'WL'}>Whitelist</Button>
               </div>
+            </div>
+
+            <div className="mt-4 p-3 bg-white rounded border text-gray-800 whitespace-pre-line">
+              <p>{description}</p>
+              <p className="mt-2 font-semibold">{verdict}</p>
             </div>
           </td>
         </tr>

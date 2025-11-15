@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
 import { WhitelistedNetworkType } from 'types'
 import { Button } from 'UI'
-import { useDeleteWhitelistMutation } from 'store/api'
+import { useDeleteWhitelistMutation, useAddLogMutation  } from 'store/api'
 
 interface TableBlacklistProps {
   network: WhitelistedNetworkType
@@ -12,11 +12,24 @@ interface TableBlacklistProps {
 const TableWhitelist: FC<TableBlacklistProps> = ({ network, isShowNetwork, onToggle }) => {
   const { id, ssid, bssid, timestamp } = network
   const [deleteWhitelist, { isLoading: isDeleting }] = useDeleteWhitelistMutation()
+  const [addLog] = useAddLogMutation()
   const handleDelete = async (id: string) => {
     try {
       await deleteWhitelist(id).unwrap()
+      addLog({
+        network_ssid: ssid,
+        network_bssid: bssid,
+        action: "WHITELIST_DELETE",
+        details: "User removed network from whitelist"
+      })
       alert('Deleted successfully')
     } catch (err) {
+      addLog({
+        network_ssid: ssid,
+        network_bssid: bssid,
+        action: "WHITELIST_DELETE_FAILED",
+        details: JSON.stringify(err)
+      })
       alert('Delete failed: ' + JSON.stringify(err))
     }
   }

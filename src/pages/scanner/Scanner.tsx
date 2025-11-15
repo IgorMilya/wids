@@ -2,7 +2,7 @@ import React, { FC, useEffect, useState } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import { load } from '@tauri-apps/plugin-store'
 import { Button, Chip, Table } from 'UI'
-import { useGetBlacklistQuery, useGetWhitelistQuery } from 'store/api'
+import { useGetBlacklistQuery, useGetWhitelistQuery, useAddLogMutation  } from 'store/api'
 import { WifiNetworkType } from 'types'
 import { TableScanner } from './table-scanner'
 import { tableTitle } from './scanner.utils'
@@ -17,6 +17,7 @@ const Scanner: FC = () => {
   const [isActive, setIsActive] = useState(false)
   const { data: blacklist = [] } = useGetBlacklistQuery()
   const { data: whitelist = [] } = useGetWhitelistQuery()
+  const [addLog] = useAddLogMutation()
   const [activeRiskFilter, setActiveRiskFilter] = useState<string | null>(null)
   const [isScanning, setIsScanning] = useState(false)
 
@@ -34,9 +35,12 @@ const Scanner: FC = () => {
   const scanWifi = async () => {
     try {
       setIsScanning(true)
+      addLog({ action: "SCAN_START", network_ssid: "-", details: "User started Wi-Fi scan" })
       const result = await invoke<WifiNetworkType[]>('scan_wifi')
       setNetworks(result)
+      addLog({ action: "SCAN_SUCCESS", network_ssid: "-", details: `Found ${result.length} networks` })
     } catch (error) {
+      addLog({ action: "SCAN_FAILED", network_ssid: "-", details: String(error) })
       console.error('Wi-Fi scan failed', error)
     } finally {
       setIsScanning(false)
@@ -94,9 +98,20 @@ const Scanner: FC = () => {
     e.stopPropagation()
     try {
       await invoke('disconnect_wifi')
+      addLog({
+        action: "DISCONNECTED",
+        network_ssid: activeNetwork?.ssid || "-",
+        network_bssid: activeNetwork?.bssid,
+        details: "User disconnected from Wi-Fi"
+      })
       alert('Disconnected from Wi-Fi')
       setActiveNetwork(null)
     } catch (error) {
+      addLog({
+        action: "DISCONNECT_FAILED",
+        network_ssid: activeNetwork?.ssid || "-",
+        details: String(error)
+      })
       alert('Failed to disconnect')
     }
   }
@@ -217,7 +232,7 @@ const Scanner: FC = () => {
         ))}
       </div>
       <div>
-        <Table tableTitle={tableTitle} notDataFound={!networks.length}>
+        <Table tableTitle={tableTitle} notDataFound={!networks.length} minH='min-h-[400px]' maxH='max-h-[400px]'>
           {filterOnActiveNetwork()?.map((row, index) => (
             <TableScanner
               key={index}
