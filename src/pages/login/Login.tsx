@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLoginMutation } from 'store/api'
 import { useDispatch } from 'react-redux'
 import { loginUser } from 'store/reducers/user.slice'
 import { ROUTES } from 'routes/routes.utils'
+import ReCAPTCHA from 'react-google-recaptcha'
 
 export const Login = () => {
   const navigate = useNavigate()
@@ -13,13 +14,22 @@ export const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const recaptchaRef = useRef<ReCAPTCHA | null>(null)
+  const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || ''
+console.log(siteKey);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
+    if (!captchaToken) {
+      setError('Please complete the captcha.')
+      return
+    }
+
     try {
-      const response = await login({ email, password }).unwrap()
+      const response = await login({ email, password, captcha_token: captchaToken }).unwrap()
       console.log('Registration response:', response)
 
       // Save user & token
@@ -29,6 +39,9 @@ export const Login = () => {
           token: response.token,
         })
       )
+
+      recaptchaRef.current?.reset()
+      setCaptchaToken(null)
 
       navigate('/dashboard')
     } catch (err: any) {
@@ -68,6 +81,19 @@ export const Login = () => {
 
           {error && (
             <div className="text-red-600 text-sm text-center">{error}</div>
+          )}
+
+          {siteKey ? (
+            <ReCAPTCHA
+              sitekey={siteKey}
+              ref={recaptchaRef}
+              onChange={(token: string | null) => setCaptchaToken(token)}
+              onExpired={() => setCaptchaToken(null)}
+            />
+          ) : (
+            <div className="text-red-600 text-sm text-center">
+              reCAPTCHA key missing. Set VITE_RECAPTCHA_SITE_KEY.
+            </div>
           )}
 
           <button

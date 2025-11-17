@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   useRegisterMutation,
@@ -8,6 +8,7 @@ import {
 import { useDispatch } from 'react-redux'
 import { loginUser } from 'store/reducers/user.slice'
 import { ROUTES } from 'routes/routes.utils'
+import ReCAPTCHA from 'react-google-recaptcha'
 
 export const Registration = () => {
   const navigate = useNavigate()
@@ -23,15 +24,27 @@ export const Registration = () => {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const recaptchaRef = useRef<ReCAPTCHA | null>(null)
+  const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || ''
+console.log(siteKey);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setInfo('')
 
+    if (!captchaToken) {
+      setError('Please complete the captcha.')
+      return
+    }
+
     try {
-      const response = await register({ email, password }).unwrap()
+      const response = await register({ email, password, captcha_token: captchaToken }).unwrap()
       console.log('Registration response:', response)
+
+      recaptchaRef.current?.reset()
+      setCaptchaToken(null)
 
       setStep('verify')
       setInfo('Verification code sent to your email.')
@@ -107,6 +120,19 @@ export const Registration = () => {
 
               {error && <div className="text-red-600 text-sm text-center">{error}</div>}
               {info && <div className="text-green-600 text-sm text-center">{info}</div>}
+
+              {siteKey ? (
+                <ReCAPTCHA
+                  sitekey={siteKey}
+                  ref={recaptchaRef}
+                  onChange={(token: string | null) => setCaptchaToken(token)}
+                  onExpired={() => setCaptchaToken(null)}
+                />
+              ) : (
+                <div className="text-red-600 text-sm text-center">
+                  reCAPTCHA key missing. Set VITE_RECAPTCHA_SITE_KEY.
+                </div>
+              )}
 
               <button
                 type="submit"

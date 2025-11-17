@@ -4,7 +4,7 @@ export const auth = api.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<
       { token: string; user_id: string; username?: string },
-      { email: string; password: string }
+      { email: string; password: string; captcha_token: string }
     >({
       query: (credentials) => ({
         url: '/auth/login',
@@ -34,7 +34,7 @@ export const auth = api.injectEndpoints({
     }),
     register: builder.mutation<
       { status: string; existing: boolean },
-      { email: string; password: string }
+      { email: string; password: string; captcha_token: string }
     >({
       query: (data) => ({
         url: '/auth/register',
