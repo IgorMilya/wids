@@ -113,8 +113,6 @@ const Logs = () => {
     link.click();
     document.body.removeChild(link);
   };
-
-
   return (
     <div className="p-5 w-full">
       <h1 className="text-xl font-bold mb-4">User Logs</h1>
@@ -140,11 +138,13 @@ const Logs = () => {
           ))}
         </Table>
       )}
-      <div className="flex gap-2 mt-4 items-center">
-        <button disabled={page === 1} onClick={() => setPage(page - 1)}>Prev</button>
-        <span> {page} of {totalPages}</span>
-        <button disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next</button>
-      </div>
+      {!!logs.length &&
+        <div className="flex gap-2 mt-4 items-center">
+          <button disabled={page === 1} onClick={() => setPage(page - 1)}>Prev</button>
+          <span> {page} of {totalPages}</span>
+          <button disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next</button>
+        </div>
+      }
     </div>
   )
 }

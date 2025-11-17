@@ -6,5 +6,7 @@ export const ROUTES ={
   WHITELIST: "/whitelist",
   LOGIN: "/login",
   CREATE_USER: "/create-user",
-  LOGS: "/logs-page"
+  LOGS: "/logs-page",
+  REGISTRATION: '/register',
+  RESET_PASSWORD: '/reset-password',
 }
