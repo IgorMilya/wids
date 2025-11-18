@@ -9,7 +9,7 @@ export {
   useResetPasswordRequestMutation,
   useResetPasswordConfirmMutation,
 } from './auth.api'
-export { useGetLogsQuery, useAddLogMutation } from './logs.api'
+export { useGetLogsQuery, useExportLogsQuery, useLazyExportLogsQuery, useAddLogMutation } from './logs.api'
 export {
   useGetProfileQuery,
   useUpdateProfileMutation,

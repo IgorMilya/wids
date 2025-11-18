@@ -1,16 +1,18 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useGetLogsQuery } from 'store/api'
+import { useGetLogsQuery, useLazyExportLogsQuery } from 'store/api'
 import { Button, Table } from 'UI'
 import TableLogs from './table-logs/TableLogs'
 
 const Logs = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [searchAction, setSearchAction] = useState('')
-  const [searchDate, setSearchDate] = useState('')
+  const [searchDateFrom, setSearchDateFrom] = useState('')
+  const [searchDateTill, setSearchDateTill] = useState('')
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [page, setPage] = useState(1)
   const limit = 11
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null)
+  const [isExporting, setIsExporting] = useState(false)
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -22,10 +24,14 @@ const Logs = () => {
   const { data, isLoading, isError, error } = useGetLogsQuery({
     ssid: debouncedSearchTerm || undefined,
     action: searchAction || undefined,
-    date: searchDate || undefined,
+    date_from: searchDateFrom || undefined,
+    date_till: searchDateTill || undefined,
     page,
     limit,
   })
+
+  // Lazy query for export - only fetch when export button is clicked
+  const [triggerExport, { data: exportData, isLoading: isExportLoading }] = useLazyExportLogsQuery()
 
   const logs = data?.logs ?? []
   const total = data?.total ?? 0
@@ -86,46 +92,153 @@ const Logs = () => {
     })
   }
 
-  const exportToCSV = () => {
-    if (!sortedData.length) return;
+  // Export all logs based on current filters
+  useEffect(() => {
+    if (isExporting && exportData) {
+      // CSV header
+      const headers = ['SSID', 'BSSID', 'Action', 'Timestamp', 'Details'];
+      
+      if (exportData.logs.length === 0) {
+        alert('No logs found matching the current filters');
+        setIsExporting(false);
+        return;
+      }
+      
+      // Sort export data if sortConfig is set
+      let exportLogs = [...exportData.logs];
+      if (sortConfig) {
+        exportLogs = exportLogs.sort((a, b) => {
+          let aValue: string | number | undefined;
+          let bValue: string | number | undefined;
 
-    // CSV header
-    const headers = ['SSID', 'BSSID', 'Action', 'Timestamp', 'Details'];
-    const rows = sortedData.map(log => [
-      log.network_ssid,
-      log.network_bssid || '-',
-      log.action,
-      new Date(log.timestamp).toLocaleString(),
-      log.details || '-'
-    ]);
+          switch (sortConfig.key) {
+            case 'SSID':
+              aValue = a.network_ssid;
+              bValue = b.network_ssid;
+              break;
+            case 'BSSID':
+              aValue = a.network_bssid;
+              bValue = b.network_bssid;
+              break;
+            case 'Action':
+              aValue = a.action;
+              bValue = b.action;
+              break;
+            case 'Timestamp':
+              aValue = new Date(a.timestamp).getTime();
+              bValue = new Date(b.timestamp).getTime();
+              break;
+            case 'Details':
+              aValue = a.details;
+              bValue = b.details;
+              break;
+            default:
+              aValue = '';
+              bValue = '';
+          }
 
-    const csvContent =
-      [headers, ...rows]
-        .map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
-        .join('\r\n');
+          if (aValue === undefined) aValue = '';
+          if (bValue === undefined) bValue = '';
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `logs_page_${page}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+          if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+          if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+      
+      const rows = exportLogs.map(log => [
+        log.network_ssid,
+        log.network_bssid || '-',
+        log.action,
+        new Date(log.timestamp).toLocaleString(),
+        log.details || '-'
+      ]);
+
+      const csvContent =
+        [headers, ...rows]
+          .map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
+          .join('\r\n');
+
+      // Generate filename based on filters
+      const filterParts: string[] = [];
+      if (debouncedSearchTerm) filterParts.push(`ssid_${debouncedSearchTerm.replace(/[^a-zA-Z0-9]/g, '_')}`);
+      if (searchAction) filterParts.push(`action_${searchAction.replace(/[^a-zA-Z0-9]/g, '_')}`);
+      if (searchDateFrom) filterParts.push(`from_${searchDateFrom}`);
+      if (searchDateTill) filterParts.push(`till_${searchDateTill}`);
+      const filterSuffix = filterParts.length > 0 ? `_${filterParts.join('_')}` : '_all';
+      const filename = `logs${filterSuffix}_${new Date().toISOString().split('T')[0]}.csv`;
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      setIsExporting(false);
+    }
+  }, [exportData, isExporting, sortConfig, debouncedSearchTerm, searchAction, searchDateFrom, searchDateTill])
+
+  const exportToCSV = async () => {
+    setIsExporting(true);
+    
+    // Fetch all logs based on current filters
+    await triggerExport({
+      ssid: debouncedSearchTerm || undefined,
+      action: searchAction || undefined,
+      date_from: searchDateFrom || undefined,
+      date_till: searchDateTill || undefined,
+    }).unwrap().catch((error) => {
+      console.error('Export failed:', error);
+      alert(`Failed to export logs: ${error?.data?.error || error?.message || 'Unknown error'}`);
+      setIsExporting(false);
+    });
   };
   return (
     <div className="p-5 w-full">
       <h1 className="text-xl font-bold mb-4">User Logs</h1>
 
-      <div className="mb-4 flex gap-2">
-        <input type="text" placeholder="SSID" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-               className="border px-3 py-2 rounded" />
-        <input type="text" placeholder="Action" value={searchAction} onChange={e => setSearchAction(e.target.value)}
-               className="border px-3 py-2 rounded" />
-        <input type="date" value={searchDate} onChange={e => setSearchDate(e.target.value)}
-               className="border px-3 py-2 rounded" />
-        <Button onClick={exportToCSV} type="button" variant="outline">
-          Export CSV
+      <div className="mb-4 flex gap-2 flex-wrap">
+        <input 
+          type="text" 
+          placeholder="SSID" 
+          value={searchTerm} 
+          onChange={e => setSearchTerm(e.target.value)}
+          className="border px-3 py-2 rounded" 
+        />
+        <input 
+          type="text" 
+          placeholder="Action" 
+          value={searchAction} 
+          onChange={e => setSearchAction(e.target.value)}
+          className="border px-3 py-2 rounded" 
+        />
+        <input 
+          type="date" 
+          placeholder="Date From" 
+          value={searchDateFrom} 
+          onChange={e => setSearchDateFrom(e.target.value)}
+          className="border px-3 py-2 rounded" 
+          title="Date From"
+        />
+        <input 
+          type="date" 
+          placeholder="Date Till" 
+          value={searchDateTill} 
+          onChange={e => setSearchDateTill(e.target.value)}
+          className="border px-3 py-2 rounded" 
+          title="Date Till"
+        />
+        <Button 
+          onClick={exportToCSV} 
+          type="button" 
+          variant="outline"
+          disabled={isExporting || isExportLoading}
+        >
+          {isExporting || isExportLoading ? 'Exporting...' : 'Export All CSV'}
         </Button>
       </div>
 

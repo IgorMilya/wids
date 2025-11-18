@@ -5,6 +5,7 @@ import {
   useUpdateProfileMutation,
   useChangeUsernameMutation,
   useChangePasswordMutation,
+  useAddLogMutation,
 } from 'store/api'
 import { useSelector, useDispatch } from 'react-redux'
 import type { RootState } from 'store/store'
@@ -17,6 +18,7 @@ const Profile: FC = () => {
   const [updateProfile] = useUpdateProfileMutation()
   const [changeUsername] = useChangeUsernameMutation()
   const [changePassword] = useChangePasswordMutation()
+  const [addLog] = useAddLogMutation()
   const user = useSelector((state: RootState) => state.user.user)
   const dispatch = useDispatch()
 
@@ -41,6 +43,10 @@ const Profile: FC = () => {
   const [usernameChanged, setUsernameChanged] = useState(false)
   const [passwordChanged, setPasswordChanged] = useState(false)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
+  
+  // Track previous values for change detection
+  const [previousProfile, setPreviousProfile] = useState<typeof profile | null>(null)
+  const [previousUsername, setPreviousUsername] = useState<string | null>(null)
 
   useEffect(() => {
     if (profile) {
@@ -52,11 +58,24 @@ const Profile: FC = () => {
       setPreferredAuth(profile.preferred_authentication || ['WPA3', 'WPA2'])
       setMinSignalStrength(profile.min_signal_strength || 50)
       setMaxRiskLevel(profile.max_risk_level || 'M')
-      setIsInitialLoad(false)
+      
+      // Store previous profile for change detection (only on initial load)
+      if (isInitialLoad) {
+        // Initial load - set previous profile to current state for comparison
+        setPreviousProfile(profile)
+        setIsInitialLoad(false)
+      }
+      // If not initial load and previousProfile exists, keep it (user is editing)
+      // previousProfile will be updated after successful save
     }
     if (user?.username) {
       setUsername(user.username)
+      // Store previous username for change detection
+      if (!previousUsername) {
+        setPreviousUsername(user.username)
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, user])
 
   // Auto-adjust min_signal_strength based on speed_network_preference
@@ -87,15 +106,18 @@ const Profile: FC = () => {
   useEffect(() => {
     if (isInitialLoad || !profile) return // Only auto-adjust after initial load
     
+    // Force immediate update based on current confidence level
     switch (confidenceLevel) {
       case 'high':
         // High confidence = stricter: only Low or Medium risk allowed
+        // If current risk is High or Critical, set to Medium
         if (maxRiskLevel === 'H' || maxRiskLevel === 'C') {
           setMaxRiskLevel('M')
         }
         break
       case 'medium':
         // Medium confidence: allow up to High risk, but not Critical
+        // If current risk is Critical, set to High
         if (maxRiskLevel === 'C') {
           setMaxRiskLevel('H')
         }
@@ -104,8 +126,7 @@ const Profile: FC = () => {
         // Low confidence allows all risk levels - no auto-adjust needed
         break
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [confidenceLevel, isInitialLoad, profile])
+  }, [confidenceLevel, maxRiskLevel, isInitialLoad, profile])
 
   // Auto-adjust settings based on profiling_preference (only suggest, don't force)
   useEffect(() => {
@@ -121,14 +142,16 @@ const Profile: FC = () => {
     
     if (profileType === 'work' || profileType === 'public') {
       // Work and public: stricter security - enforce Low/Medium risk only
+      // If current risk is High or Critical, set to Medium
       if (maxRiskLevel === 'H' || maxRiskLevel === 'C') {
         setMaxRiskLevel('M')
       }
+      
       // Only allow secure authentication for work/public - enforce WPA3/WPA2 only
       const hasUnsecureAuth = preferredAuth.some(auth => auth !== 'WPA3' && auth !== 'WPA2')
       const hasSecureAuth = preferredAuth.includes('WPA3') || preferredAuth.includes('WPA2')
       
-      // If there's unsecure auth or no secure auth, replace with only secure
+      // If there's unsecure auth (like WPA or Open) or no secure auth, replace with only secure
       if (hasUnsecureAuth || !hasSecureAuth) {
         const newAuth = preferredAuth.filter(auth => auth === 'WPA3' || auth === 'WPA2')
         // Ensure at least WPA3 or WPA2 is present
@@ -139,8 +162,7 @@ const Profile: FC = () => {
         }
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profileType, isInitialLoad, profile])
+  }, [profileType, maxRiskLevel, preferredAuth, isInitialLoad, profile])
 
   const handleAuthToggle = (auth: string) => {
     setPreferredAuth(prev =>
@@ -152,6 +174,85 @@ const Profile: FC = () => {
 
   const handleSaveProfile = async () => {
     try {
+      // Detect what changed by comparing with previous profile
+      const changedFields: string[] = []
+      
+      if (previousProfile) {
+        if (previousProfile.profiling_preference !== profilingPreference) {
+          changedFields.push(`Profiling Preference: ${previousProfile.profiling_preference} → ${profilingPreference}`)
+          addLog({
+            network_ssid: '-',
+            action: 'PROFILE_SETTING_CHANGED',
+            details: `Profiling Preference changed from "${previousProfile.profiling_preference}" to "${profilingPreference}"`,
+          }).catch(console.error)
+        }
+        
+        if (previousProfile.speed_network_preference !== speedNetworkPreference) {
+          changedFields.push(`Speed Network Preference: ${previousProfile.speed_network_preference} → ${speedNetworkPreference}`)
+          addLog({
+            network_ssid: '-',
+            action: 'PROFILE_SETTING_CHANGED',
+            details: `Speed Network Preference changed from "${previousProfile.speed_network_preference}" to "${speedNetworkPreference}"`,
+          }).catch(console.error)
+        }
+        
+        if (previousProfile.confidence_level !== confidenceLevel) {
+          changedFields.push(`Confidence Level: ${previousProfile.confidence_level} → ${confidenceLevel}`)
+          addLog({
+            network_ssid: '-',
+            action: 'PROFILE_SETTING_CHANGED',
+            details: `Confidence Level changed from "${previousProfile.confidence_level}" to "${confidenceLevel}"`,
+          }).catch(console.error)
+        }
+        
+        if (previousProfile.profile_type !== profileType) {
+          changedFields.push(`Profile Type: ${previousProfile.profile_type} → ${profileType}`)
+          addLog({
+            network_ssid: '-',
+            action: 'PROFILE_SETTING_CHANGED',
+            details: `Profile Type changed from "${previousProfile.profile_type}" to "${profileType}"`,
+          }).catch(console.error)
+        }
+        
+        if (previousProfile.network_preference !== networkPreference) {
+          changedFields.push(`Network Preference: ${previousProfile.network_preference} → ${networkPreference}`)
+          addLog({
+            network_ssid: '-',
+            action: 'PROFILE_SETTING_CHANGED',
+            details: `Network Preference changed from "${previousProfile.network_preference}" to "${networkPreference}"`,
+          }).catch(console.error)
+        }
+        
+        const prevAuthStr = (previousProfile.preferred_authentication || []).sort().join(', ')
+        const newAuthStr = preferredAuth.sort().join(', ')
+        if (prevAuthStr !== newAuthStr) {
+          changedFields.push(`Preferred Authentication: [${prevAuthStr}] → [${newAuthStr}]`)
+          addLog({
+            network_ssid: '-',
+            action: 'PROFILE_SETTING_CHANGED',
+            details: `Preferred Authentication changed from [${prevAuthStr}] to [${newAuthStr}]`,
+          }).catch(console.error)
+        }
+        
+        if (previousProfile.min_signal_strength !== minSignalStrength) {
+          changedFields.push(`Minimum Signal Strength: ${previousProfile.min_signal_strength}% → ${minSignalStrength}%`)
+          addLog({
+            network_ssid: '-',
+            action: 'PROFILE_SETTING_CHANGED',
+            details: `Minimum Signal Strength changed from ${previousProfile.min_signal_strength}% to ${minSignalStrength}%`,
+          }).catch(console.error)
+        }
+        
+        if (previousProfile.max_risk_level !== maxRiskLevel) {
+          changedFields.push(`Maximum Risk Level: ${previousProfile.max_risk_level} → ${maxRiskLevel}`)
+          addLog({
+            network_ssid: '-',
+            action: 'PROFILE_SETTING_CHANGED',
+            details: `Maximum Risk Level changed from "${previousProfile.max_risk_level}" to "${maxRiskLevel}"`,
+          }).catch(console.error)
+        }
+      }
+      
       await updateProfile({
         profiling_preference: profilingPreference,
         speed_network_preference: speedNetworkPreference,
@@ -162,8 +263,43 @@ const Profile: FC = () => {
         min_signal_strength: minSignalStrength,
         max_risk_level: maxRiskLevel,
       }).unwrap()
+      
+      // Update previous profile after successful save to reflect new values
+      setPreviousProfile({
+        ...profile!,
+        profiling_preference: profilingPreference,
+        speed_network_preference: speedNetworkPreference,
+        confidence_level: confidenceLevel,
+        profile_type: profileType,
+        network_preference: networkPreference,
+        preferred_authentication: preferredAuth,
+        min_signal_strength: minSignalStrength,
+        max_risk_level: maxRiskLevel,
+      })
+      
+      // Log summary if multiple fields changed
+      if (changedFields.length > 1) {
+        addLog({
+          network_ssid: '-',
+          action: 'PROFILE_UPDATED',
+          details: `Profile updated: ${changedFields.length} settings changed`,
+        }).catch(console.error)
+      } else if (changedFields.length === 0) {
+        // No changes detected (user clicked save without changes)
+        addLog({
+          network_ssid: '-',
+          action: 'PROFILE_SAVE_ATTEMPTED',
+          details: 'Profile save attempted but no changes detected',
+        }).catch(console.error)
+      }
+      
       alert('Profile updated successfully!')
     } catch (error: any) {
+      addLog({
+        network_ssid: '-',
+        action: 'PROFILE_UPDATE_FAILED',
+        details: `Failed to update profile: ${error?.data?.error || error?.message || 'Unknown error'}`,
+      }).catch(console.error)
       alert(`Failed to update profile: ${error?.data?.error || error?.message || 'Unknown error'}`)
     }
   }
@@ -173,13 +309,36 @@ const Profile: FC = () => {
       alert('Username cannot be empty')
       return
     }
+    
+    const oldUsername = previousUsername || user?.username || ''
+    const newUsername = username.trim()
+    
+    if (oldUsername === newUsername) {
+      alert('Username is unchanged')
+      return
+    }
+    
     try {
-      const response = await changeUsername({ username: username.trim() }).unwrap()
+      const response = await changeUsername({ username: newUsername }).unwrap()
       dispatch(updateUsername(response.username))
+      setPreviousUsername(newUsername)
       setUsernameChanged(true)
       setTimeout(() => setUsernameChanged(false), 3000)
+      
+      // Log username change
+      addLog({
+        network_ssid: '-',
+        action: 'USERNAME_CHANGED',
+        details: `Username changed from "${oldUsername}" to "${newUsername}"`,
+      }).catch(console.error)
+      
       alert('Username updated successfully!')
     } catch (error: any) {
+      addLog({
+        network_ssid: '-',
+        action: 'USERNAME_CHANGE_FAILED',
+        details: `Failed to change username: ${error?.data?.error || error?.message || 'Unknown error'}`,
+      }).catch(console.error)
       alert(`Failed to update username: ${error?.data?.error || error?.message || 'Unknown error'}`)
     }
   }
@@ -187,10 +346,20 @@ const Profile: FC = () => {
   const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
       alert('New passwords do not match')
+      addLog({
+        network_ssid: '-',
+        action: 'PASSWORD_CHANGE_FAILED',
+        details: 'Password change failed: New passwords do not match',
+      }).catch(console.error)
       return
     }
     if (newPassword.length < 6) {
       alert('Password must be at least 6 characters')
+      addLog({
+        network_ssid: '-',
+        action: 'PASSWORD_CHANGE_FAILED',
+        details: `Password change failed: Password too short (${newPassword.length} characters, minimum 6 required)`,
+      }).catch(console.error)
       return
     }
     try {
@@ -198,6 +367,14 @@ const Profile: FC = () => {
         current_password: currentPassword,
         new_password: newPassword,
       }).unwrap()
+      
+      // Log successful password change (don't log the actual password)
+      addLog({
+        network_ssid: '-',
+        action: 'PASSWORD_CHANGED',
+        details: `Password changed successfully (length: ${newPassword.length} characters)`,
+      }).catch(console.error)
+      
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
@@ -205,6 +382,11 @@ const Profile: FC = () => {
       setTimeout(() => setPasswordChanged(false), 3000)
       alert('Password updated successfully!')
     } catch (error: any) {
+      addLog({
+        network_ssid: '-',
+        action: 'PASSWORD_CHANGE_FAILED',
+        details: `Failed to change password: ${error?.data?.error || error?.message || 'Unknown error'}`,
+      }).catch(console.error)
       alert(`Failed to update password: ${error?.data?.error || error?.message || 'Unknown error'}`)
     }
   }
