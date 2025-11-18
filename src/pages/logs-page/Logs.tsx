@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useGetLogsQuery, useLazyExportLogsQuery } from 'store/api'
 import { Button, Table } from 'UI'
 import TableLogs from './table-logs/TableLogs'
@@ -22,12 +22,14 @@ const Logs = () => {
   }, [searchTerm])
 
   const { data, isLoading, isError, error } = useGetLogsQuery({
-    ssid: debouncedSearchTerm || undefined,
-    action: searchAction || undefined,
-    date_from: searchDateFrom || undefined,
-    date_till: searchDateTill || undefined,
+    ssid: debouncedSearchTerm.trim() || undefined,
+    action: searchAction.trim() || undefined,
+    date_from: searchDateFrom.trim() || undefined,
+    date_till: searchDateTill.trim() || undefined,
     page,
     limit,
+    sort_by: sortConfig?.key || undefined,
+    sort_direction: sortConfig?.direction || undefined,
   })
 
   // Lazy query for export - only fetch when export button is clicked
@@ -37,50 +39,8 @@ const Logs = () => {
   const total = data?.total ?? 0
   const totalPages = Math.ceil(total / limit)
 
-  const sortedData = useMemo(() => {
-    if (!sortConfig) return logs
-
-    const sorted = [...logs].sort((a, b) => {
-      let aValue: string | number | undefined
-      let bValue: string | number | undefined
-
-      // Map column names to actual keys if needed
-      switch (sortConfig.key) {
-        case 'SSID':
-          aValue = a.network_ssid
-          bValue = b.network_ssid
-          break
-        case 'BSSID':
-          aValue = a.network_bssid
-          bValue = b.network_bssid
-          break
-        case 'Action':
-          aValue = a.action
-          bValue = b.action
-          break
-        case 'Timestamp':
-          aValue = new Date(a.timestamp).getTime()
-          bValue = new Date(b.timestamp).getTime()
-          break
-        case 'Details':
-          aValue = a.details
-          bValue = b.details
-          break
-        default:
-          aValue = ''
-          bValue = ''
-      }
-
-      if (aValue === undefined) aValue = ''
-      if (bValue === undefined) bValue = ''
-
-      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1
-      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1
-      return 0
-    })
-
-    return sorted
-  }, [logs, sortConfig])
+  // Sorting is now done server-side, so we just use logs directly
+  const sortedData = logs
 
 
   const handleSort = (column: string) => {
@@ -90,6 +50,8 @@ const Logs = () => {
       }
       return { key: column, direction: 'asc' }
     })
+    // Reset to page 1 when sorting changes
+    setPage(1)
   }
 
   // Export all logs based on current filters
@@ -104,47 +66,8 @@ const Logs = () => {
         return;
       }
       
-      // Sort export data if sortConfig is set
-      let exportLogs = [...exportData.logs];
-      if (sortConfig) {
-        exportLogs = exportLogs.sort((a, b) => {
-          let aValue: string | number | undefined;
-          let bValue: string | number | undefined;
-
-          switch (sortConfig.key) {
-            case 'SSID':
-              aValue = a.network_ssid;
-              bValue = b.network_ssid;
-              break;
-            case 'BSSID':
-              aValue = a.network_bssid;
-              bValue = b.network_bssid;
-              break;
-            case 'Action':
-              aValue = a.action;
-              bValue = b.action;
-              break;
-            case 'Timestamp':
-              aValue = new Date(a.timestamp).getTime();
-              bValue = new Date(b.timestamp).getTime();
-              break;
-            case 'Details':
-              aValue = a.details;
-              bValue = b.details;
-              break;
-            default:
-              aValue = '';
-              bValue = '';
-          }
-
-          if (aValue === undefined) aValue = '';
-          if (bValue === undefined) bValue = '';
-
-          if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-          if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-          return 0;
-        });
-      }
+      // Sorting is done server-side, so we just use exportData.logs directly
+      const exportLogs = exportData.logs;
       
       const rows = exportLogs.map(log => [
         log.network_ssid,
@@ -187,10 +110,12 @@ const Logs = () => {
     
     // Fetch all logs based on current filters
     await triggerExport({
-      ssid: debouncedSearchTerm || undefined,
-      action: searchAction || undefined,
-      date_from: searchDateFrom || undefined,
-      date_till: searchDateTill || undefined,
+      ssid: debouncedSearchTerm.trim() || undefined,
+      action: searchAction.trim() || undefined,
+      date_from: searchDateFrom.trim() || undefined,
+      date_till: searchDateTill.trim() || undefined,
+      sort_by: sortConfig?.key || undefined,
+      sort_direction: sortConfig?.direction || undefined,
     }).unwrap().catch((error) => {
       console.error('Export failed:', error);
       alert(`Failed to export logs: ${error?.data?.error || error?.message || 'Unknown error'}`);

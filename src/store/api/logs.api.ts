@@ -13,6 +13,8 @@ export const logsApi = api.injectEndpoints({
         date_till?: string
         limit: number
         page: number
+        sort_by?: string
+        sort_direction?: 'asc' | 'desc'
       } | void
     >({
       query: (params) => {
@@ -26,6 +28,8 @@ export const logsApi = api.injectEndpoints({
           if (params.date_till) urlParams.append('date_till', params.date_till)
           if (params.page) urlParams.append('page', params.page.toString())
           if (params.limit) urlParams.append('limit', params.limit.toString())
+          if (params.sort_by) urlParams.append('sort_by', params.sort_by)
+          if (params.sort_direction) urlParams.append('sort_direction', params.sort_direction)
           queryString = `?${urlParams.toString()}`
         }
         return `/logs${queryString}`
@@ -41,6 +45,8 @@ export const logsApi = api.injectEndpoints({
         date?: string
         date_from?: string
         date_till?: string
+        sort_by?: string
+        sort_direction?: 'asc' | 'desc'
       } | void
     >({
       query: (params) => {
@@ -52,6 +58,8 @@ export const logsApi = api.injectEndpoints({
           if (params.date) urlParams.append('date', params.date)
           if (params.date_from) urlParams.append('date_from', params.date_from)
           if (params.date_till) urlParams.append('date_till', params.date_till)
+          if (params.sort_by) urlParams.append('sort_by', params.sort_by)
+          if (params.sort_direction) urlParams.append('sort_direction', params.sort_direction)
           queryString = `?${urlParams.toString()}`
         }
         return `/logs/export${queryString}`
