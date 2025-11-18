@@ -12,6 +12,6 @@ export const api = createApi({
       return headers
     },
   }),
-  tagTypes: ['Blacklist', 'Whitelist', 'Logs'],
+  tagTypes: ['Blacklist', 'Whitelist', 'Logs', 'Profile'],
   endpoints: () => ({}),
 })

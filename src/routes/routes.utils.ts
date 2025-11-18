@@ -9,4 +9,5 @@ export const ROUTES ={
   LOGS: "/logs-page",
   REGISTRATION: '/register',
   RESET_PASSWORD: '/reset-password',
+  PROFILE: '/profile',
 }

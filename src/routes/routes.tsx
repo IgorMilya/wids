@@ -9,6 +9,7 @@ import {
   Registration,
   Logs,
   ResetPassword,
+  Profile,
 } from 'pages'
 import { ProtectedRoute } from './ProtectedRoute'
 import { ROUTES } from './routes.utils'
@@ -30,6 +31,7 @@ export const AppRouter = () => {
           <Route path={ROUTES.BLACKLIST} element={<Blacklist />} />
           <Route path={ROUTES.WHITELIST} element={<Whitelist />} />
           <Route path={ROUTES.LOGS} element={<Logs />} />
+          <Route path={ROUTES.PROFILE} element={<Profile />} />
         </Route>
       </Route>
     </Routes>

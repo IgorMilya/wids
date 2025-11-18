@@ -2,7 +2,7 @@ import React, { FC, useEffect, useState } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import { load } from '@tauri-apps/plugin-store'
 import { Button, Chip, Table } from 'UI'
-import { useGetBlacklistQuery, useGetWhitelistQuery, useAddLogMutation  } from 'store/api'
+import { useGetBlacklistQuery, useGetWhitelistQuery, useAddLogMutation, useGetProfileQuery } from 'store/api'
 import { WifiNetworkType } from 'types'
 import { TableScanner } from './table-scanner'
 import { tableTitle } from './scanner.utils'
@@ -17,6 +17,7 @@ const Scanner: FC = () => {
   const [isActive, setIsActive] = useState(false)
   const { data: blacklist = [] } = useGetBlacklistQuery()
   const { data: whitelist = [] } = useGetWhitelistQuery()
+  const { data: profile } = useGetProfileQuery()
   const [addLog] = useAddLogMutation()
   const [activeRiskFilter, setActiveRiskFilter] = useState<string | null>(null)
   const [isScanning, setIsScanning] = useState(false)
@@ -30,6 +31,77 @@ const Scanner: FC = () => {
     low: 'L',
     whitelist: 'WL',
     whitelisted: 'WL',
+  }
+
+  const riskLevelValue: Record<string, number> = {
+    'L': 1,
+    'M': 2,
+    'H': 3,
+    'C': 4,
+    'WL': 0,
+  }
+
+  // Helper function to calculate effective minimum signal strength based on speed_network_preference
+  const getEffectiveMinSignal = (baseMinSignal: number | null | undefined, speedPreference: string | undefined): number => {
+    if (baseMinSignal !== null && baseMinSignal !== undefined) {
+      // If explicitly set, use it, but adjust based on speed preference
+      switch (speedPreference) {
+        case 'high':
+          return Math.max(baseMinSignal, 70) // Require at least 70% for high speed
+        case 'medium':
+          return Math.max(baseMinSignal, 50) // Require at least 50% for medium
+        case 'low':
+          return Math.max(baseMinSignal, 30) // Allow lower signal for low speed
+        default:
+          return baseMinSignal || 50
+      }
+    }
+    // Default based on speed preference
+    switch (speedPreference) {
+      case 'high':
+        return 70
+      case 'medium':
+        return 50
+      case 'low':
+        return 30
+      default:
+        return 50
+    }
+  }
+
+  // Helper function to calculate effective maximum risk level based on confidence_level
+  const getEffectiveMaxRisk = (baseMaxRisk: string | null | undefined, confidenceLevel: string | undefined, profileType: string | undefined): string => {
+    const baseRiskValue = baseMaxRisk ? riskLevelValue[baseMaxRisk] || 4 : 4
+    
+    // Adjust based on confidence level
+    let adjustedRisk = baseRiskValue
+    switch (confidenceLevel) {
+      case 'high':
+        // High confidence = stricter (lower max risk)
+        adjustedRisk = Math.min(baseRiskValue, 2) // Only Low or Medium
+        break
+      case 'medium':
+        adjustedRisk = Math.min(baseRiskValue, 3) // Up to High
+        break
+      case 'low':
+        // Low confidence = more lenient (allow higher risk)
+        adjustedRisk = 4 // Allow all
+        break
+    }
+
+    // Adjust based on profile type (work requires more security)
+    if (profileType === 'work') {
+      adjustedRisk = Math.min(adjustedRisk, 2) // Work networks should be Low or Medium only
+    } else if (profileType === 'public') {
+      adjustedRisk = Math.min(adjustedRisk, 2) // Public networks should be more secure
+    }
+    // personal: use adjusted risk as calculated
+
+    // Convert back to risk level string
+    if (adjustedRisk <= 1) return 'L'
+    if (adjustedRisk <= 2) return 'M'
+    if (adjustedRisk <= 3) return 'H'
+    return 'C'
   }
 
   const scanWifi = async () => {
@@ -153,8 +225,86 @@ const Scanner: FC = () => {
         risk: localWhitelist.includes(item.bssid.toLowerCase()) ? 'WL' : item.risk,
       }))
       .filter(item => {
+        // Apply profile filters if profile exists
+        if (profile) {
+          // Calculate effective values based on preferences
+          const effectiveMinSignal = getEffectiveMinSignal(
+            profile.min_signal_strength,
+            profile.speed_network_preference
+          )
+          const effectiveMaxRisk = getEffectiveMaxRisk(
+            profile.max_risk_level,
+            profile.confidence_level,
+            profile.profile_type
+          )
+
+          // Apply profiling_preference strategy
+          // If profiling_preference is "speed", prioritize signal strength over security
+          // If profiling_preference is "security", prioritize security over speed
+          // If profiling_preference is "balanced", use balanced approach
+          const isSpeedPriority = profile.profiling_preference === 'speed'
+          const isSecurityPriority = profile.profiling_preference === 'security'
+
+          // Filter by preferred authentication types
+          if (profile.preferred_authentication && profile.preferred_authentication.length > 0) {
+            const hasPreferredAuth = profile.preferred_authentication.some(auth =>
+              item.authentication?.toLowerCase().includes(auth.toLowerCase())
+            )
+            if (!hasPreferredAuth) return false
+          }
+
+          // Filter by effective minimum signal strength
+          const signalStrength = parseInt(item.signal?.replace('%', '') || '0')
+          if (signalStrength < effectiveMinSignal) return false
+
+          // Filter by effective maximum risk level
+          const itemRiskValue = riskLevelValue[item.risk] || 4
+          const maxRiskValue = riskLevelValue[effectiveMaxRisk] || 4
+          if (itemRiskValue > maxRiskValue) return false
+
+          // Apply network preference filtering
+          if (profile.network_preference === 'more_speed_less_security') {
+            // More speed, less security: allow higher risk if signal is strong
+            // Already handled by effective values, but can be more lenient
+            if (signalStrength > 80 && itemRiskValue <= 4) {
+              // Allow any risk if signal is very strong
+            } else if (itemRiskValue > maxRiskValue) {
+              return false
+            }
+          } else if (profile.network_preference === 'more_security_less_speed') {
+            // More security, less speed: stricter risk filtering
+            // Enforce stricter risk even if signal is lower
+            if (itemRiskValue > 2) return false // Only Low and Medium risk
+          }
+          // balanced: use effective values as calculated
+
+          // Additional filtering based on profiling_preference priority
+          if (isSecurityPriority && itemRiskValue > 2) {
+            // Security priority: only show Low and Medium risk
+            return false
+          }
+
+          if (isSpeedPriority && signalStrength < effectiveMinSignal * 0.8) {
+            // Speed priority: can accept slightly lower signal, but not too low
+            if (signalStrength < effectiveMinSignal * 0.6) return false
+          }
+
+          // Profile type specific filtering
+          if (profile.profile_type === 'work' || profile.profile_type === 'public') {
+            // Work and public profiles: only show secure authentication types
+            const secureAuth = ['WPA3', 'WPA2'].some(auth =>
+              item.authentication?.toLowerCase().includes(auth.toLowerCase())
+            )
+            if (!secureAuth) return false
+            // Work and public: no high or critical risk networks
+            if (itemRiskValue > 2) return false
+          }
+        }
+
+        // Apply manual risk filter
         if (chipMappedRisk && item.risk !== chipMappedRisk) return false
 
+        // Apply search term filter
         if (!term) return true
 
         const matchesRisk = mappedRisk ? item.risk?.toLowerCase() === mappedRisk.toLowerCase() : false

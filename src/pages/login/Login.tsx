@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ReCAPTCHA from 'react-google-recaptcha'
 import { useLoginMutation } from 'store/api'
 import { useDispatch } from 'react-redux'
 import { loginUser } from 'store/reducers/user.slice'
 import { ROUTES } from 'routes/routes.utils'
-import ReCAPTCHA from 'react-google-recaptcha'
 
 export const Login = () => {
   const navigate = useNavigate()

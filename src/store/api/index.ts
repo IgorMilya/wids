@@ -10,3 +10,11 @@ export {
   useResetPasswordConfirmMutation,
 } from './auth.api'
 export { useGetLogsQuery, useAddLogMutation } from './logs.api'
+export {
+  useGetProfileQuery,
+  useUpdateProfileMutation,
+  useChangeUsernameMutation,
+  useChangePasswordMutation,
+  type UserProfile,
+  type UpdateProfileRequest,
+} from './profile.api'
