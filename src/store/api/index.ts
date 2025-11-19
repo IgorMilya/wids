@@ -18,3 +18,4 @@ export {
   type UserProfile,
   type UpdateProfileRequest,
 } from './profile.api'
+export { useGetAnalyticsQuery, type AnalyticsResponse } from './analytics.api'

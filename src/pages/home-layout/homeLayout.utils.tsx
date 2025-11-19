@@ -21,4 +21,8 @@ export const navLink: LinkItemType[] = [
     link: '/logs-page',
     title: 'Logs',
   },
+  {
+    link: '/analytics',
+    title: 'Analytics',
+  },
 ]

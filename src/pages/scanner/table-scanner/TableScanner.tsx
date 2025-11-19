@@ -40,7 +40,9 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
         authentication: authentication,
       })
       alert(result)
-      logAction('CONNECTED', `Connected successfully: ${result}`)
+      // Include risk level in connection log for analytics tracking
+      const riskLabel = risk === 'C' ? 'Critical' : risk === 'H' ? 'High' : risk === 'M' ? 'Medium' : risk === 'L' ? 'Low' : risk === 'WL' ? 'Whitelisted' : 'Unknown'
+      logAction('CONNECTED', `Connected successfully: ${result}. Risk level: ${risk} (${riskLabel})`)
       onFetchActiveNetwork()
     } catch (error: any) {
       const errMessage = typeof error === 'string' ? error : error.toString()
@@ -66,7 +68,9 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
             authentication: authentication,
           })
           alert(retry)
-          logAction('CONNECTED_RETRY', `Connected after password retry`)
+          // Include risk level in connection log for analytics tracking
+          const riskLabel = risk === 'C' ? 'Critical' : risk === 'H' ? 'High' : risk === 'M' ? 'Medium' : risk === 'L' ? 'Low' : risk === 'WL' ? 'Whitelisted' : 'Unknown'
+          logAction('CONNECTED_RETRY', `Connected after password retry. Risk level: ${risk} (${riskLabel})`)
           onFetchActiveNetwork()
         } catch (finalError: any) {
           logAction('CONNECT_RETRY_FAILED', finalError.toString())

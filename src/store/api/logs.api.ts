@@ -73,7 +73,7 @@ export const logsApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['Logs'],
+      invalidatesTags: ['Logs', 'Analytics'],
     }),
   }),
 })

@@ -24,14 +24,14 @@ const blacklistApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['Blacklist'],
+      invalidatesTags: ['Blacklist', 'Analytics'],
     }),
     deleteBlacklist: builder.mutation<void, string>({
       query: (id) => ({
         url: `/blacklist/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Blacklist'],
+      invalidatesTags: ['Blacklist', 'Analytics'],
     }),
   }),
 })

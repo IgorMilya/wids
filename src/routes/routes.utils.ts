@@ -10,4 +10,5 @@ export const ROUTES ={
   REGISTRATION: '/register',
   RESET_PASSWORD: '/reset-password',
   PROFILE: '/profile',
+  ANALYTICS: '/analytics',
 }

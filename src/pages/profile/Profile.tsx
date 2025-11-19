@@ -55,14 +55,18 @@ const Profile: FC = () => {
       setConfidenceLevel(profile.confidence_level)
       setProfileType(profile.profile_type)
       setNetworkPreference(profile.network_preference)
-      setPreferredAuth(profile.preferred_authentication || ['WPA3', 'WPA2'])
+      setPreferredAuth([...(profile.preferred_authentication || ['WPA3', 'WPA2'])]) // Create a copy to avoid read-only issues
       setMinSignalStrength(profile.min_signal_strength || 50)
       setMaxRiskLevel(profile.max_risk_level || 'M')
       
       // Store previous profile for change detection (only on initial load)
       if (isInitialLoad) {
         // Initial load - set previous profile to current state for comparison
-        setPreviousProfile(profile)
+        // Create a deep copy to avoid read-only issues with RTK Query response
+        setPreviousProfile({
+          ...profile,
+          preferred_authentication: [...(profile.preferred_authentication || [])],
+        })
         setIsInitialLoad(false)
       }
       // If not initial load and previousProfile exists, keep it (user is editing)
@@ -223,8 +227,8 @@ const Profile: FC = () => {
           }).catch(console.error)
         }
         
-        const prevAuthStr = (previousProfile.preferred_authentication || []).sort().join(', ')
-        const newAuthStr = preferredAuth.sort().join(', ')
+        const prevAuthStr = [...(previousProfile.preferred_authentication || [])].sort().join(', ')
+        const newAuthStr = [...preferredAuth].sort().join(', ')
         if (prevAuthStr !== newAuthStr) {
           changedFields.push(`Preferred Authentication: [${prevAuthStr}] → [${newAuthStr}]`)
           addLog({
@@ -272,7 +276,7 @@ const Profile: FC = () => {
         confidence_level: confidenceLevel,
         profile_type: profileType,
         network_preference: networkPreference,
-        preferred_authentication: preferredAuth,
+        preferred_authentication: [...preferredAuth], // Create a copy to avoid read-only issues
         min_signal_strength: minSignalStrength,
         max_risk_level: maxRiskLevel,
       })

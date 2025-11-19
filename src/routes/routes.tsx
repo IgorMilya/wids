@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import {
+  Analytics,
   Blacklist,
   Dashboard,
   HomeLayout,
@@ -32,6 +33,7 @@ export const AppRouter = () => {
           <Route path={ROUTES.WHITELIST} element={<Whitelist />} />
           <Route path={ROUTES.LOGS} element={<Logs />} />
           <Route path={ROUTES.PROFILE} element={<Profile />} />
+          <Route path={ROUTES.ANALYTICS} element={<Analytics />} />
         </Route>
       </Route>
     </Routes>

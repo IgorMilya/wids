@@ -25,14 +25,14 @@ const whitelistApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['Whitelist'],
+      invalidatesTags: ['Whitelist', 'Analytics'],
     }),
     deleteWhitelist: builder.mutation<void, string>({
       query: (id) => ({
         url: `/whitelist/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Whitelist'],
+      invalidatesTags: ['Whitelist', 'Analytics'],
     }),
   }),
 })

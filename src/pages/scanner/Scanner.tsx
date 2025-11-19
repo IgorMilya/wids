@@ -44,6 +44,10 @@ const Scanner: FC = () => {
   // Helper function to calculate effective minimum signal strength based on speed_network_preference
   const getEffectiveMinSignal = (baseMinSignal: number | null | undefined, speedPreference: string | undefined): number => {
     if (baseMinSignal !== null && baseMinSignal !== undefined) {
+      // If user explicitly set to 0, respect it (show all networks regardless of signal)
+      if (baseMinSignal === 0) {
+        return 0
+      }
       // If explicitly set, use it, but adjust based on speed preference
       switch (speedPreference) {
         case 'high':
@@ -51,7 +55,9 @@ const Scanner: FC = () => {
         case 'medium':
           return Math.max(baseMinSignal, 50) // Require at least 50% for medium
         case 'low':
-          return Math.max(baseMinSignal, 30) // Allow lower signal for low speed
+          // For low speed preference, respect user's choice if it's low enough
+          // Only enforce minimum if user didn't explicitly set a low value
+          return Math.max(baseMinSignal, 0) // Allow any signal for low speed
         default:
           return baseMinSignal || 50
       }
@@ -63,7 +69,7 @@ const Scanner: FC = () => {
       case 'medium':
         return 50
       case 'low':
-        return 30
+        return 0 // Allow all signals for low speed preference when not explicitly set
       default:
         return 50
     }
@@ -260,7 +266,12 @@ const Scanner: FC = () => {
           // Filter by effective maximum risk level
           const itemRiskValue = riskLevelValue[item.risk] || 4
           const maxRiskValue = riskLevelValue[effectiveMaxRisk] || 4
-          if (itemRiskValue > maxRiskValue) return false
+          // If confidence_level is "low", always allow all networks regardless of base max_risk_level
+          if (profile.confidence_level === 'low') {
+            // Low confidence = allow all risk levels, don't filter by risk
+          } else if (itemRiskValue > maxRiskValue) {
+            return false
+          }
 
           // Apply network preference filtering
           if (profile.network_preference === 'more_speed_less_security') {
