@@ -19,3 +19,12 @@ export {
   type UpdateProfileRequest,
 } from './profile.api'
 export { useGetAnalyticsQuery, type AnalyticsResponse } from './analytics.api'
+export {
+  useGetThreatsQuery,
+  useGetMonitoringPreferencesQuery,
+  useUpdateMonitoringPreferencesMutation,
+  type Threat,
+  type ThreatsResponse,
+  type MonitoringPreferences,
+  type UpdateMonitoringPreferencesRequest,
+} from './monitoring.api'
