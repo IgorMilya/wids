@@ -1,3 +1,4 @@
+import React from 'react'
 import { useGetAnalyticsQuery } from 'store/api'
 import {
   Chart as ChartJS,
@@ -40,12 +41,18 @@ const COLORS = {
 }
 
 const Analytics = () => {
-  const { data, isLoading, isError } = useGetAnalyticsQuery(undefined, {
-    // Refetch when window regains focus (user comes back to the tab)
-    refetchOnFocus: true,
-    // Automatically refetch every 15 seconds while on this page
-    pollingInterval: 15000,
-  })
+  // Hooks must be called unconditionally before any early returns
+  const [threatDateFilter, setThreatDateFilter] = React.useState<'day' | 'week' | 'month' | 'year' | 'all'>('all')
+  
+  const { data, isLoading, isError } = useGetAnalyticsQuery(
+    { threatDateFilter },
+    {
+      // Refetch when window regains focus (user comes back to the tab)
+      refetchOnFocus: true,
+      // Automatically refetch every 15 seconds while on this page
+      pollingInterval: 15000,
+    }
+  )
 
   if (isLoading) {
     return (
@@ -63,13 +70,7 @@ const Analytics = () => {
     )
   }
 
-  const { security_metrics, connection_stats, blacklist_whitelist, user_activity, network_stats, time_series } = data
-
-  // Format date for display
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  }
+  const { security_metrics, connection_stats, blacklist_whitelist, user_activity, network_stats, time_series, threat_analytics } = data
 
   // Risk Level Distribution Pie Chart
   const riskLevelData = [
@@ -133,103 +134,91 @@ const Analytics = () => {
     ],
   }
 
-  // Daily Activity Line Chart
-  const dailyActivityChartData = {
-    labels:
-      time_series.daily_activity.length > 0
-        ? time_series.daily_activity.map((d) => formatDate(d.date))
-        : [],
+  // Threat Type Distribution - Donut Chart
+  const threatTypeData = [
+    threat_analytics.threat_type_distribution.rogue_aps,
+    threat_analytics.threat_type_distribution.evil_twins,
+    threat_analytics.threat_type_distribution.suspicious_open_networks,
+    threat_analytics.threat_type_distribution.weak_encryption,
+    threat_analytics.threat_type_distribution.deauth_attacks,
+    threat_analytics.threat_type_distribution.mac_spoof_attempts,
+    threat_analytics.threat_type_distribution.blacklisted_networks_detected,
+  ].filter((val) => val > 0)
+
+  const threatTypeLabels = [
+    'Rogue APs',
+    'Evil Twins',
+    'Suspicious Open Networks',
+    'Weak Encryption',
+    'Deauth Attacks',
+    'MAC Spoof Attempts',
+    'Blacklisted Networks Detected',
+  ].filter((_, idx) => [
+    threat_analytics.threat_type_distribution.rogue_aps,
+    threat_analytics.threat_type_distribution.evil_twins,
+    threat_analytics.threat_type_distribution.suspicious_open_networks,
+    threat_analytics.threat_type_distribution.weak_encryption,
+    threat_analytics.threat_type_distribution.deauth_attacks,
+    threat_analytics.threat_type_distribution.mac_spoof_attempts,
+    threat_analytics.threat_type_distribution.blacklisted_networks_detected,
+  ][idx] > 0)
+
+  const threatTypeChartData = {
+    labels: threatTypeLabels,
     datasets: [
       {
-        label: 'Scans',
-        data:
-          time_series.daily_activity.length > 0
-            ? time_series.daily_activity.map((d) => d.scans)
-            : [],
-        borderColor: COLORS.primary,
-        backgroundColor: `${COLORS.primary}20`,
-        fill: true,
-        tension: 0.4,
+        label: 'Threat Type Distribution',
+        data: threatTypeData,
+        backgroundColor: [
+          COLORS.danger,
+          '#dc2626',
+          COLORS.warning,
+          '#f59e0b',
+          COLORS.primary,
+          COLORS.secondary,
+          '#7c3aed',
+        ].slice(0, threatTypeData.length),
+        borderColor: [
+          COLORS.danger,
+          '#dc2626',
+          COLORS.warning,
+          '#f59e0b',
+          COLORS.primary,
+          COLORS.secondary,
+          '#7c3aed',
+        ].slice(0, threatTypeData.length),
         borderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-      },
-      {
-        label: 'Connections',
-        data:
-          time_series.daily_activity.length > 0
-            ? time_series.daily_activity.map((d) => d.connections)
-            : [],
-        borderColor: COLORS.success,
-        backgroundColor: `${COLORS.success}20`,
-        fill: true,
-        tension: 0.4,
-        borderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-      },
-      {
-        label: 'Blacklist Adds',
-        data:
-          time_series.daily_activity.length > 0
-            ? time_series.daily_activity.map((d) => d.blacklist_adds)
-            : [],
-        borderColor: COLORS.danger,
-        backgroundColor: `${COLORS.danger}20`,
-        fill: true,
-        tension: 0.4,
-        borderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-      },
-      {
-        label: 'Whitelist Adds',
-        data:
-          time_series.daily_activity.length > 0
-            ? time_series.daily_activity.map((d) => d.whitelist_adds)
-            : [],
-        borderColor: COLORS.warning,
-        backgroundColor: `${COLORS.warning}20`,
-        fill: true,
-        tension: 0.4,
-        borderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
       },
     ],
   }
 
-  // Hourly Activity Bar Chart
-  const hourlyActivityChartData = {
-    labels:
-      time_series.hourly_activity.length > 0
-        ? time_series.hourly_activity.map((h) => `${h.hour}:00`)
-        : Array.from({ length: 24 }, (_, i) => `${i}:00`),
-    datasets: [
-      {
-        label: 'Activity Count',
-        data:
-          time_series.hourly_activity.length > 0
-            ? time_series.hourly_activity.map((h) => h.activity_count)
-            : Array.from({ length: 24 }, () => 0),
-        backgroundColor: COLORS.secondary,
-        borderColor: COLORS.secondary,
-        borderWidth: 1,
-        borderRadius: 4,
-      },
-    ],
-  }
+  // Channel Usage - Bar Chart
+  const channelLabels = ['Channel 1', 'Channel 6', 'Channel 11', ...threat_analytics.channel_usage.channels_5ghz.map(c => `Ch ${c.channel}`)]
+  const channelData = [
+    threat_analytics.channel_usage.channel_1,
+    threat_analytics.channel_usage.channel_6,
+    threat_analytics.channel_usage.channel_11,
+    ...threat_analytics.channel_usage.channels_5ghz.map(c => c.count),
+  ]
 
-  // Top Scanned Networks Bar Chart
-  const topNetworks = network_stats.most_scanned_networks.slice(0, 5)
-  const topNetworksChartData = {
-    labels: topNetworks.length > 0 ? topNetworks.map((n) => n.ssid || 'Unknown') : [],
+  const channelUsageChartData = {
+    labels: channelLabels,
     datasets: [
       {
-        label: 'Scan Count',
-        data: topNetworks.length > 0 ? topNetworks.map((n) => n.scan_count) : [],
-        backgroundColor: COLORS.primary,
-        borderColor: COLORS.primary,
+        label: 'AP Count',
+        data: channelData,
+        backgroundColor: [
+          COLORS.primary,
+          COLORS.secondary,
+          COLORS.warning,
+          ...threat_analytics.channel_usage.channels_5ghz.map(() => '#8b5cf6'),
+        ],
+        borderColor: [
+          COLORS.primary,
+          COLORS.secondary,
+          COLORS.warning,
+          ...threat_analytics.channel_usage.channels_5ghz.map(() => '#8b5cf6'),
+        ],
         borderWidth: 1,
         borderRadius: 4,
       },
@@ -504,44 +493,84 @@ const Analytics = () => {
         </div>
       </div>
 
-      {/* Daily Activity Chart */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">Daily Activity (Last 30 Days)</h2>
-        {time_series.daily_activity.length > 0 ? (
-          <div className="h-[350px]">
-            <Line data={dailyActivityChartData} options={lineChartOptions} />
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-[350px] text-gray-500">
-            No daily activity data available for the last 30 days.
-          </div>
-        )}
-      </div>
-
-      {/* Hourly Activity & Top Networks */}
+      {/* Threat Type Distribution & Channel Usage */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">Hourly Activity (Last 7 Days)</h2>
-          {time_series.hourly_activity.length > 0 ? (
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-800">Threat Type Distribution</h2>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setThreatDateFilter('day')}
+                className={`px-3 py-1 rounded text-xs font-medium ${
+                  threatDateFilter === 'day'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Day
+              </button>
+              <button
+                onClick={() => setThreatDateFilter('week')}
+                className={`px-3 py-1 rounded text-xs font-medium ${
+                  threatDateFilter === 'week'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Week
+              </button>
+              <button
+                onClick={() => setThreatDateFilter('month')}
+                className={`px-3 py-1 rounded text-xs font-medium ${
+                  threatDateFilter === 'month'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Month
+              </button>
+              <button
+                onClick={() => setThreatDateFilter('year')}
+                className={`px-3 py-1 rounded text-xs font-medium ${
+                  threatDateFilter === 'year'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Year
+              </button>
+              <button
+                onClick={() => setThreatDateFilter('all')}
+                className={`px-3 py-1 rounded text-xs font-medium ${
+                  threatDateFilter === 'all'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                All
+              </button>
+            </div>
+          </div>
+          {threatTypeData.length > 0 ? (
             <div className="h-[300px]">
-              <Bar data={hourlyActivityChartData} options={barChartOptions} />
+              <Pie data={threatTypeChartData} options={pieChartOptions} />
             </div>
           ) : (
             <div className="flex items-center justify-center h-[300px] text-gray-500">
-              No hourly activity data available for the last 7 days.
+              No threat type data available.
             </div>
           )}
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">Top Scanned Networks</h2>
-          {topNetworks.length > 0 ? (
+          <h2 className="text-xl font-bold mb-4 text-gray-800">Channel Usage</h2>
+          {(channelData.some(v => v > 0)) ? (
             <div className="h-[300px]">
-              <Bar data={topNetworksChartData} options={horizontalBarChartOptions} />
+              <Bar data={channelUsageChartData} options={barChartOptions} />
             </div>
           ) : (
             <div className="flex items-center justify-center h-[300px] text-gray-500">
-              No network scan data available
+              No channel usage data available.
             </div>
           )}
         </div>

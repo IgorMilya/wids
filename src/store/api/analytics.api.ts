@@ -7,6 +7,7 @@ export interface AnalyticsResponse {
   user_activity: UserActivityStats
   network_stats: NetworkStats
   time_series: TimeSeriesData
+  threat_analytics: ThreatAnalytics
 }
 
 export interface SecurityMetrics {
@@ -80,10 +81,72 @@ export interface HourlyActivity {
   activity_count: number
 }
 
+// New threat analytics interfaces
+export interface ThreatAnalytics {
+  threats_over_time: ThreatsOverTime
+  threat_type_distribution: ThreatTypeDistribution
+  channel_usage: ChannelUsage
+  top_suspicious_networks: TopSuspiciousNetwork[]
+}
+
+export interface ThreatsOverTime {
+  daily: ThreatTimePoint[]
+  weekly: ThreatTimePoint[]
+  monthly: ThreatTimePoint[]
+  by_type: ThreatTypeTimePoint[]
+}
+
+export interface ThreatTimePoint {
+  date: string
+  total_threats: number
+}
+
+export interface ThreatTypeTimePoint {
+  date: string
+  threat_type: string
+  count: number
+}
+
+export interface ThreatTypeDistribution {
+  rogue_aps: number
+  evil_twins: number
+  suspicious_open_networks: number
+  weak_encryption: number
+  deauth_attacks: number
+  mac_spoof_attempts: number
+  blacklisted_networks_detected: number
+}
+
+export interface ChannelUsage {
+  channel_1: number
+  channel_6: number
+  channel_11: number
+  channels_5ghz: Channel5Ghz[]
+}
+
+export interface Channel5Ghz {
+  channel: number
+  count: number
+}
+
+export interface TopSuspiciousNetwork {
+  ssid: string
+  bssid: string
+  risk_score: string
+  threat_count: number
+}
+
 export const analyticsApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getAnalytics: builder.query<AnalyticsResponse, void>({
-      query: () => '/analytics',
+    getAnalytics: builder.query<AnalyticsResponse, { threatDateFilter?: 'day' | 'week' | 'month' | 'year' | 'all' } | void>({
+      query: (params) => {
+        const queryParams = new URLSearchParams()
+        if (params?.threatDateFilter) {
+          queryParams.append('threat_date_filter', params.threatDateFilter)
+        }
+        const queryString = queryParams.toString()
+        return `/analytics${queryString ? `?${queryString}` : ''}`
+      },
       providesTags: ['Analytics'],
     }),
   }),
