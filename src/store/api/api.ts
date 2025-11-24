@@ -12,6 +12,6 @@ export const api = createApi({
       return headers
     },
   }),
-  tagTypes: ['Blacklist', 'Whitelist', 'Logs', 'Profile', 'Analytics', 'Threats', 'MonitoringPreferences'],
+  tagTypes: ['Blacklist', 'Whitelist', 'Logs', 'Profile', 'Analytics'], // Real-time monitoring feature - COMMENTED OUT (will be re-enabled in future) // 'Threats', 'MonitoringPreferences',
   endpoints: () => ({}),
 })

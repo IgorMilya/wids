@@ -98,8 +98,6 @@ const Scanner: FC = () => {
     // Adjust based on profile type (work requires more security)
     if (profileType === 'work') {
       adjustedRisk = Math.min(adjustedRisk, 2) // Work networks should be Low or Medium only
-    } else if (profileType === 'public') {
-      adjustedRisk = Math.min(adjustedRisk, 2) // Public networks should be more secure
     }
     // personal: use adjusted risk as calculated
 
@@ -204,15 +202,15 @@ const Scanner: FC = () => {
 
 
   useEffect(() => {
-    if (whitelist.length > 0) {
-      syncWhitelistToStore()
-    }
+    // Always sync whitelist to store, even if empty, to ensure local state is updated
+    // This ensures deleted networks are removed from localWhitelist immediately
+    syncWhitelistToStore().catch(console.error)
   }, [whitelist])
 
   useEffect(() => {
-    if (blacklist.length > 0) {
-      syncBlacklistToStore()
-    }
+    // Always sync blacklist to store, even if empty, to ensure local state is updated
+    // This ensures deleted networks are removed from localBlacklist immediately
+    syncBlacklistToStore().catch(console.error)
   }, [blacklist])
 
 
@@ -273,22 +271,6 @@ const Scanner: FC = () => {
             return false
           }
 
-          // Apply network preference filtering
-          if (profile.network_preference === 'more_speed_less_security') {
-            // More speed, less security: allow higher risk if signal is strong
-            // Already handled by effective values, but can be more lenient
-            if (signalStrength > 80 && itemRiskValue <= 4) {
-              // Allow any risk if signal is very strong
-            } else if (itemRiskValue > maxRiskValue) {
-              return false
-            }
-          } else if (profile.network_preference === 'more_security_less_speed') {
-            // More security, less speed: stricter risk filtering
-            // Enforce stricter risk even if signal is lower
-            if (itemRiskValue > 2) return false // Only Low and Medium risk
-          }
-          // balanced: use effective values as calculated
-
           // Additional filtering based on profiling_preference priority
           if (isSecurityPriority && itemRiskValue > 2) {
             // Security priority: only show Low and Medium risk
@@ -301,13 +283,13 @@ const Scanner: FC = () => {
           }
 
           // Profile type specific filtering
-          if (profile.profile_type === 'work' || profile.profile_type === 'public') {
-            // Work and public profiles: only show secure authentication types
+          if (profile.profile_type === 'work') {
+            // Work profiles: only show secure authentication types
             const secureAuth = ['WPA3', 'WPA2'].some(auth =>
               item.authentication?.toLowerCase().includes(auth.toLowerCase())
             )
             if (!secureAuth) return false
-            // Work and public: no high or critical risk networks
+            // Work: no high or critical risk networks
             if (itemRiskValue > 2) return false
           }
         }

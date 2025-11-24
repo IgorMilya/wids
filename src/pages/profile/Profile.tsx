@@ -30,7 +30,6 @@ const Profile: FC = () => {
   const [speedNetworkPreference, setSpeedNetworkPreference] = useState('medium')
   const [confidenceLevel, setConfidenceLevel] = useState('medium')
   const [profileType, setProfileType] = useState('personal')
-  const [networkPreference, setNetworkPreference] = useState('balanced')
   const [preferredAuth, setPreferredAuth] = useState<string[]>(['WPA3', 'WPA2'])
   const [minSignalStrength, setMinSignalStrength] = useState(50)
   const [maxRiskLevel, setMaxRiskLevel] = useState('M')
@@ -54,7 +53,6 @@ const Profile: FC = () => {
       setSpeedNetworkPreference(profile.speed_network_preference)
       setConfidenceLevel(profile.confidence_level)
       setProfileType(profile.profile_type)
-      setNetworkPreference(profile.network_preference)
       setPreferredAuth([...(profile.preferred_authentication || ['WPA3', 'WPA2'])]) // Create a copy to avoid read-only issues
       setMinSignalStrength(profile.min_signal_strength || 50)
       setMaxRiskLevel(profile.max_risk_level || 'M')
@@ -132,26 +130,71 @@ const Profile: FC = () => {
     }
   }, [confidenceLevel, maxRiskLevel, isInitialLoad, profile])
 
-  // Auto-adjust settings based on profiling_preference (only suggest, don't force)
+  // Auto-adjust settings based on profiling_preference
+  // This should run after confidence level adjustments to ensure profiling preference takes priority
   useEffect(() => {
     if (isInitialLoad || !profile) return // Only auto-adjust after initial load
     
-    // Note: We don't auto-adjust other fields here to avoid loops
-    // This is just for information - the filtering logic uses profiling_preference
+    switch (profilingPreference) {
+      case 'speed':
+        // Speed priority: set high speed preference and allow higher risk
+        setSpeedNetworkPreference('high')
+        // Allow higher risk levels for speed priority (up to High, not Critical)
+        if (maxRiskLevel === 'L' || maxRiskLevel === 'M' || maxRiskLevel === 'C') {
+          setMaxRiskLevel('H')
+        }
+        // Auto-set minimum signal strength to high if not already set high enough
+        // This will be handled by the speedNetworkPreference useEffect, but ensure it's at least 70
+        if (minSignalStrength < 70) {
+          setMinSignalStrength(70)
+        }
+        break
+      case 'security':
+        // Security priority: focus on secure networks only
+        // Don't change Speed Network Preference - leave it as user set
+        // Set Preferred Authentication Types to only WPA3 and WPA2 (most secure)
+        const hasOnlySecureAuth = preferredAuth.length === 2 && 
+          preferredAuth.includes('WPA3') && 
+          preferredAuth.includes('WPA2') &&
+          !preferredAuth.some(auth => auth !== 'WPA3' && auth !== 'WPA2')
+        if (!hasOnlySecureAuth) {
+          setPreferredAuth(['WPA3', 'WPA2'])
+        }
+        // Set Maximum Risk Level to Medium (allows Low and Medium only)
+        if (maxRiskLevel === 'H' || maxRiskLevel === 'C') {
+          setMaxRiskLevel('M')
+        }
+        // Don't touch minimum signal strength - not relevant for security
+        break
+      case 'balanced':
+        // Balanced: set medium speed preference and medium risk
+        setSpeedNetworkPreference('medium')
+        // Allow up to High risk but not Critical for balanced
+        if (maxRiskLevel === 'C') {
+          setMaxRiskLevel('H')
+        }
+        // Auto-set minimum signal strength to medium if needed
+        // This will be handled by the speedNetworkPreference useEffect, but ensure it's around 50
+        if (minSignalStrength < 40 || minSignalStrength > 60) {
+          setMinSignalStrength(50)
+        }
+        break
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profilingPreference, isInitialLoad, profile])
 
   // Auto-adjust settings based on profile_type
   useEffect(() => {
     if (isInitialLoad || !profile) return // Only auto-adjust after initial load
     
-    if (profileType === 'work' || profileType === 'public') {
-      // Work and public: stricter security - enforce Low/Medium risk only
+    if (profileType === 'work') {
+      // Work: stricter security - enforce Low/Medium risk only
       // If current risk is High or Critical, set to Medium
       if (maxRiskLevel === 'H' || maxRiskLevel === 'C') {
         setMaxRiskLevel('M')
       }
       
-      // Only allow secure authentication for work/public - enforce WPA3/WPA2 only
+      // Only allow secure authentication for work - enforce WPA3/WPA2 only
       const hasUnsecureAuth = preferredAuth.some(auth => auth !== 'WPA3' && auth !== 'WPA2')
       const hasSecureAuth = preferredAuth.includes('WPA3') || preferredAuth.includes('WPA2')
       
@@ -169,6 +212,21 @@ const Profile: FC = () => {
   }, [profileType, maxRiskLevel, preferredAuth, isInitialLoad, profile])
 
   const handleAuthToggle = (auth: string) => {
+    // In security mode or work mode: only allow WPA3 and WPA2, and prevent unchecking them
+    const isSecurityMode = profilingPreference === 'security'
+    const isWorkMode = profileType === 'work'
+    
+    if (isSecurityMode || isWorkMode) {
+      // Prevent toggling non-secure auth types
+      if (auth !== 'WPA3' && auth !== 'WPA2') {
+        return
+      }
+      // Prevent unchecking secure auth types (must have at least one)
+      if (preferredAuth.includes(auth) && preferredAuth.filter(a => a === 'WPA3' || a === 'WPA2').length <= 1) {
+        return // Don't allow unchecking if it's the last secure auth type
+      }
+    }
+    
     setPreferredAuth(prev =>
       prev.includes(auth)
         ? prev.filter(a => a !== auth)
@@ -218,15 +276,6 @@ const Profile: FC = () => {
           }).catch(console.error)
         }
         
-        if (previousProfile.network_preference !== networkPreference) {
-          changedFields.push(`Network Preference: ${previousProfile.network_preference} → ${networkPreference}`)
-          addLog({
-            network_ssid: '-',
-            action: 'PROFILE_SETTING_CHANGED',
-            details: `Network Preference changed from "${previousProfile.network_preference}" to "${networkPreference}"`,
-          }).catch(console.error)
-        }
-        
         const prevAuthStr = [...(previousProfile.preferred_authentication || [])].sort().join(', ')
         const newAuthStr = [...preferredAuth].sort().join(', ')
         if (prevAuthStr !== newAuthStr) {
@@ -262,7 +311,6 @@ const Profile: FC = () => {
         speed_network_preference: speedNetworkPreference,
         confidence_level: confidenceLevel,
         profile_type: profileType,
-        network_preference: networkPreference,
         preferred_authentication: preferredAuth,
         min_signal_strength: minSignalStrength,
         max_risk_level: maxRiskLevel,
@@ -275,7 +323,6 @@ const Profile: FC = () => {
         speed_network_preference: speedNetworkPreference,
         confidence_level: confidenceLevel,
         profile_type: profileType,
-        network_preference: networkPreference,
         preferred_authentication: [...preferredAuth], // Create a copy to avoid read-only issues
         min_signal_strength: minSignalStrength,
         max_risk_level: maxRiskLevel,
@@ -488,38 +535,41 @@ const Profile: FC = () => {
           >
             <option value="personal">Personal</option>
             <option value="work">Work</option>
-            <option value="public">Public</option>
-          </select>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">Network Preference</label>
-          <select
-            value={networkPreference}
-            onChange={(e) => setNetworkPreference(e.target.value)}
-            className="w-full p-2 border rounded-md"
-          >
-            <option value="more_speed_less_security">More Speed, Less Security</option>
-            <option value="balanced">Balanced</option>
-            <option value="more_security_less_speed">More Security, Less Speed</option>
           </select>
         </div>
 
         <div className="mb-4">
           <label className="block text-sm font-medium mb-2">Preferred Authentication Types</label>
           <div className="flex flex-wrap gap-3">
-            {['WPA3', 'WPA2', 'WPA', 'Open'].map((auth) => (
-              <label key={auth} className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={preferredAuth.includes(auth)}
-                  onChange={() => handleAuthToggle(auth)}
-                  className="mr-2"
-                />
-                {auth}
-              </label>
-            ))}
+            {['WPA3', 'WPA2', 'WPA', 'Open'].map((auth) => {
+              const isSecurityMode = profilingPreference === 'security'
+              const isWorkMode = profileType === 'work'
+              const isSecureAuth = auth === 'WPA3' || auth === 'WPA2'
+              const isDisabled = (isSecurityMode || isWorkMode) && !isSecureAuth
+              
+              return (
+                <label 
+                  key={auth} 
+                  className={`flex items-center ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={preferredAuth.includes(auth)}
+                    onChange={() => handleAuthToggle(auth)}
+                    disabled={isDisabled}
+                    className="mr-2"
+                  />
+                  {auth}
+                </label>
+              )
+            })}
           </div>
+          {(profilingPreference === 'security' || profileType === 'work') && (
+            <p className="text-xs text-gray-500 mt-1">
+              {profilingPreference === 'security' ? 'Security mode: ' : 'Work mode: '}
+              Only WPA3 and WPA2 allowed
+            </p>
+          )}
         </div>
 
         <div className="mb-4">
@@ -545,9 +595,15 @@ const Profile: FC = () => {
           >
             <option value="L">Low</option>
             <option value="M">Medium</option>
-            <option value="H">High</option>
-            <option value="C">Critical</option>
+            <option value="H" disabled={profilingPreference === 'security' || profileType === 'work'}>High</option>
+            <option value="C" disabled={profilingPreference === 'security' || profileType === 'work'}>Critical</option>
           </select>
+          {(profilingPreference === 'security' || profileType === 'work') && (
+            <p className="text-xs text-gray-500 mt-1">
+              {profilingPreference === 'security' ? 'Security mode: ' : 'Work mode: '}
+              Only Low and Medium risk levels allowed
+            </p>
+          )}
         </div>
 
             <div className="mt-6">

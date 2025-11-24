@@ -19,12 +19,18 @@ export {
   type UpdateProfileRequest,
 } from './profile.api'
 export { useGetAnalyticsQuery, type AnalyticsResponse } from './analytics.api'
-export {
-  useGetThreatsQuery,
-  useGetMonitoringPreferencesQuery,
-  useUpdateMonitoringPreferencesMutation,
-  type Threat,
-  type ThreatsResponse,
-  type MonitoringPreferences,
-  type UpdateMonitoringPreferencesRequest,
-} from './monitoring.api'
+// Real-time monitoring feature - COMMENTED OUT (will be re-enabled in future)
+// export {
+//   useGetThreatsQuery,
+//   useGetMonitoringPreferencesQuery,
+//   useUpdateMonitoringPreferencesMutation,
+//   type Threat,
+//   type ThreatsResponse,
+//   type MonitoringPreferences,
+//   type UpdateMonitoringPreferencesRequest,
+// } from './monitoring.api'
+// export {
+//   useGetThreatsQuery,
+//   useGetMonitoringPreferencesQuery,
+//   useUpdateMonitoringPreferencesMutation,
+// } from './monitoring.api'

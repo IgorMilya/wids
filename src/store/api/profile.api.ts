@@ -6,7 +6,6 @@ export interface UserProfile {
   speed_network_preference: string
   confidence_level: string
   profile_type: string
-  network_preference: string
   preferred_authentication: string[]
   min_signal_strength: number | null
   max_risk_level: string | null
@@ -17,7 +16,6 @@ export interface UpdateProfileRequest {
   speed_network_preference?: string
   confidence_level?: string
   profile_type?: string
-  network_preference?: string
   preferred_authentication?: string[]
   min_signal_strength?: number
   max_risk_level?: string

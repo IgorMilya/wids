@@ -11,7 +11,7 @@ import {
   Logs,
   ResetPassword,
   Profile,
-  MonitoringSettings,
+  // MonitoringSettings,
 } from 'pages'
 import { ProtectedRoute } from './ProtectedRoute'
 import { ROUTES } from './routes.utils'
@@ -35,7 +35,7 @@ export const AppRouter = () => {
           <Route path={ROUTES.LOGS} element={<Logs />} />
           <Route path={ROUTES.PROFILE} element={<Profile />} />
           <Route path={ROUTES.ANALYTICS} element={<Analytics />} />
-          <Route path={ROUTES.MONITORING_SETTINGS} element={<MonitoringSettings />} />
+          {/* <Route path={ROUTES.MONITORING_SETTINGS} element={<MonitoringSettings />} /> */}
         </Route>
       </Route>
     </Routes>

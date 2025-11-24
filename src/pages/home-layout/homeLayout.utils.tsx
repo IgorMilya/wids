@@ -25,8 +25,8 @@ export const navLink: LinkItemType[] = [
     link: '/analytics',
     title: 'Analytics',
   },
-  {
-    link: '/monitoring-settings',
-    title: 'Monitoring',
-  },
+  // {
+  //   link: '/monitoring-settings',
+  //   title: 'Monitoring',
+  // },
 ]
