@@ -56,16 +56,16 @@ const Analytics = () => {
 
   if (isLoading) {
     return (
-      <div className="p-5 w-full flex items-center justify-center min-h-screen">
-        <div className="text-xl">Loading analytics...</div>
+      <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full flex items-center justify-center min-h-screen">
+        <div className="text-lg small-laptop:text-xl">Loading analytics...</div>
       </div>
     )
   }
 
   if (isError || !data) {
     return (
-      <div className="p-5 w-full flex items-center justify-center min-h-screen">
-        <div className="text-xl text-red-500">Failed to load analytics</div>
+      <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full flex items-center justify-center min-h-screen">
+        <div className="text-lg small-laptop:text-xl text-red-500">Failed to load analytics</div>
       </div>
     )
   }
@@ -430,63 +430,63 @@ const Analytics = () => {
   }
 
   return (
-    <div className="p-5 w-full max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Analytics Dashboard</h1>
+    <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full max-w-full large-laptop:max-w-7xl mx-auto">
+      <h1 className="text-xl small-laptop:text-2xl normal-laptop:text-3xl font-bold mb-4 small-laptop:mb-5 normal-laptop:mb-6 text-gray-800">Analytics Dashboard</h1>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
-          <h3 className="text-gray-600 text-sm font-medium mb-2">Total Scans</h3>
-          <p className="text-3xl font-bold text-gray-800">{connection_stats.total_scan_attempts}</p>
+      <div className="grid grid-cols-1 small-laptop:grid-cols-2 normal-laptop:grid-cols-2 large-laptop:grid-cols-4 gap-3 small-laptop:gap-4 mb-6 small-laptop:mb-8">
+        <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+          <h3 className="text-gray-600 text-xs small-laptop:text-sm font-medium mb-1 small-laptop:mb-2">Total Scans</h3>
+          <p className="text-2xl small-laptop:text-3xl font-bold text-gray-800">{connection_stats.total_scan_attempts}</p>
           <p className="text-xs text-gray-500 mt-1">
             {connection_stats.avg_connections_per_day.toFixed(1)} avg/day
           </p>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
-          <h3 className="text-gray-600 text-sm font-medium mb-2">Successful Connections</h3>
-          <p className="text-3xl font-bold text-gray-800">{security_metrics.successful_connections}</p>
+        <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md border-l-4 border-green-500">
+          <h3 className="text-gray-600 text-xs small-laptop:text-sm font-medium mb-1 small-laptop:mb-2">Successful Connections</h3>
+          <p className="text-2xl small-laptop:text-3xl font-bold text-gray-800">{security_metrics.successful_connections}</p>
           <p className="text-xs text-gray-500 mt-1">
             {connection_stats.connection_success_rate.toFixed(1)}% success rate
           </p>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-500">
-          <h3 className="text-gray-600 text-sm font-medium mb-2">High Risk Connections</h3>
-          <p className="text-3xl font-bold text-gray-800">{security_metrics.high_risk_connections}</p>
+        <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md border-l-4 border-red-500">
+          <h3 className="text-gray-600 text-xs small-laptop:text-sm font-medium mb-1 small-laptop:mb-2">High Risk Connections</h3>
+          <p className="text-2xl small-laptop:text-3xl font-bold text-gray-800">{security_metrics.high_risk_connections}</p>
           <p className="text-xs text-gray-500 mt-1">Requires attention</p>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-500">
-          <h3 className="text-gray-600 text-sm font-medium mb-2">Unique Networks</h3>
-          <p className="text-3xl font-bold text-gray-800">{network_stats.unique_networks_scanned}</p>
+        <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md border-l-4 border-purple-500">
+          <h3 className="text-gray-600 text-xs small-laptop:text-sm font-medium mb-1 small-laptop:mb-2">Unique Networks</h3>
+          <p className="text-2xl small-laptop:text-3xl font-bold text-gray-800">{network_stats.unique_networks_scanned}</p>
           <p className="text-xs text-gray-500 mt-1">Total discovered</p>
         </div>
       </div>
 
       {/* Security Metrics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">Risk Level Distribution</h2>
+      <div className="grid grid-cols-1 normal-laptop:grid-cols-2 gap-4 small-laptop:gap-5 normal-laptop:gap-6 mb-6 small-laptop:mb-8">
+        <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
+          <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800">Risk Level Distribution</h2>
           {riskLevelData.length > 0 ? (
-            <div className="h-[300px]">
+            <div className="h-[250px] small-laptop:h-[300px]">
               <Pie data={riskLevelChartData} options={pieChartOptions} />
             </div>
           ) : (
-            <div className="flex items-center justify-center h-[300px] text-gray-500">
+            <div className="flex items-center justify-center h-[250px] small-laptop:h-[300px] text-gray-500">
               No risk data available.
             </div>
           )}
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">Connection Status</h2>
+        <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
+          <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800">Connection Status</h2>
           {connectionStatusData.length > 0 ? (
-            <div className="h-[300px]">
+            <div className="h-[250px] small-laptop:h-[300px]">
               <Pie data={connectionStatusChartData} options={pieChartOptions} />
             </div>
           ) : (
-            <div className="flex items-center justify-center h-[300px] text-gray-500">
+            <div className="flex items-center justify-center h-[250px] small-laptop:h-[300px] text-gray-500">
               No connection data available.
             </div>
           )}
@@ -494,14 +494,14 @@ const Analytics = () => {
       </div>
 
       {/* Threat Type Distribution & Channel Usage */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-800">Threat Type Distribution</h2>
-            <div className="flex gap-2">
+      <div className="grid grid-cols-1 normal-laptop:grid-cols-2 gap-4 small-laptop:gap-5 normal-laptop:gap-6 mb-6 small-laptop:mb-8">
+        <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
+          <div className="flex flex-col small-laptop:flex-row justify-between items-start small-laptop:items-center mb-3 small-laptop:mb-4 gap-2">
+            <h2 className="text-lg small-laptop:text-xl font-bold text-gray-800">Threat Type Distribution</h2>
+            <div className="flex flex-wrap gap-1 small-laptop:gap-2">
               <button
                 onClick={() => setThreatDateFilter('day')}
-                className={`px-3 py-1 rounded text-xs font-medium ${
+                className={`px-2 small-laptop:px-3 py-1 rounded text-xs font-medium ${
                   threatDateFilter === 'day'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -511,7 +511,7 @@ const Analytics = () => {
               </button>
               <button
                 onClick={() => setThreatDateFilter('week')}
-                className={`px-3 py-1 rounded text-xs font-medium ${
+                className={`px-2 small-laptop:px-3 py-1 rounded text-xs font-medium ${
                   threatDateFilter === 'week'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -521,7 +521,7 @@ const Analytics = () => {
               </button>
               <button
                 onClick={() => setThreatDateFilter('month')}
-                className={`px-3 py-1 rounded text-xs font-medium ${
+                className={`px-2 small-laptop:px-3 py-1 rounded text-xs font-medium ${
                   threatDateFilter === 'month'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -531,7 +531,7 @@ const Analytics = () => {
               </button>
               <button
                 onClick={() => setThreatDateFilter('year')}
-                className={`px-3 py-1 rounded text-xs font-medium ${
+                className={`px-2 small-laptop:px-3 py-1 rounded text-xs font-medium ${
                   threatDateFilter === 'year'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -541,7 +541,7 @@ const Analytics = () => {
               </button>
               <button
                 onClick={() => setThreatDateFilter('all')}
-                className={`px-3 py-1 rounded text-xs font-medium ${
+                className={`px-2 small-laptop:px-3 py-1 rounded text-xs font-medium ${
                   threatDateFilter === 'all'
                     ? 'bg-blue-500 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -552,24 +552,24 @@ const Analytics = () => {
             </div>
           </div>
           {threatTypeData.length > 0 ? (
-            <div className="h-[300px]">
+            <div className="h-[250px] small-laptop:h-[300px]">
               <Pie data={threatTypeChartData} options={pieChartOptions} />
             </div>
           ) : (
-            <div className="flex items-center justify-center h-[300px] text-gray-500">
+            <div className="flex items-center justify-center h-[250px] small-laptop:h-[300px] text-gray-500">
               No threat type data available.
             </div>
           )}
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">Channel Usage</h2>
+        <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
+          <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800">Channel Usage</h2>
           {(channelData.some(v => v > 0)) ? (
-            <div className="h-[300px]">
+            <div className="h-[250px] small-laptop:h-[300px]">
               <Bar data={channelUsageChartData} options={barChartOptions} />
             </div>
           ) : (
-            <div className="flex items-center justify-center h-[300px] text-gray-500">
+            <div className="flex items-center justify-center h-[250px] small-laptop:h-[300px] text-gray-500">
               No channel usage data available.
             </div>
           )}
@@ -577,10 +577,10 @@ const Analytics = () => {
       </div>
 
       {/* Blacklist/Whitelist Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">Blacklist vs Whitelist</h2>
-          <div className="h-[250px] mb-4">
+      <div className="grid grid-cols-1 normal-laptop:grid-cols-2 gap-4 small-laptop:gap-5 normal-laptop:gap-6 mb-6 small-laptop:mb-8">
+        <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
+          <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800">Blacklist vs Whitelist</h2>
+          <div className="h-[200px] small-laptop:h-[250px] mb-3 small-laptop:mb-4">
             <Bar data={listComparisonChartData} options={barChartOptions} />
           </div>
           <div className="mt-4 space-y-4">
@@ -639,51 +639,51 @@ const Analytics = () => {
               </div>
             </div>
             {/* Total Stats */}
-            <div className="border-t pt-3 grid grid-cols-2 gap-4">
+            <div className="border-t pt-3 grid grid-cols-1 small-laptop:grid-cols-2 gap-3 small-laptop:gap-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-red-600">{blacklist_whitelist.blacklist_additions}</p>
-                <p className="text-sm text-gray-600">Total Blacklist Additions</p>
-                <p className="text-2xl font-bold text-red-600">{blacklist_whitelist.blacklist_removals}</p>
-                <p className="text-sm text-gray-600">Total Blacklist Removals</p>
+                <p className="text-xl small-laptop:text-2xl font-bold text-red-600">{blacklist_whitelist.blacklist_additions}</p>
+                <p className="text-xs small-laptop:text-sm text-gray-600">Total Blacklist Additions</p>
+                <p className="text-xl small-laptop:text-2xl font-bold text-red-600 mt-2">{blacklist_whitelist.blacklist_removals}</p>
+                <p className="text-xs small-laptop:text-sm text-gray-600">Total Blacklist Removals</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-green-600">{blacklist_whitelist.whitelist_additions}</p>
-                <p className="text-sm text-gray-600">Total Whitelist Additions</p>
-                <p className="text-2xl font-bold text-green-600">{blacklist_whitelist.whitelist_removals}</p>
-                <p className="text-sm text-gray-600">Total Whitelist Removals</p>
+                <p className="text-xl small-laptop:text-2xl font-bold text-green-600">{blacklist_whitelist.whitelist_additions}</p>
+                <p className="text-xs small-laptop:text-sm text-gray-600">Total Whitelist Additions</p>
+                <p className="text-xl small-laptop:text-2xl font-bold text-green-600 mt-2">{blacklist_whitelist.whitelist_removals}</p>
+                <p className="text-xs small-laptop:text-sm text-gray-600">Total Whitelist Removals</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">User Activity Statistics</h2>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-              <span className="text-gray-700">Password Changes</span>
-              <span className="text-2xl font-bold text-gray-800">{user_activity.password_changes}</span>
+        <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
+          <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800">User Activity Statistics</h2>
+          <div className="space-y-3 small-laptop:space-y-4">
+            <div className="flex justify-between items-center p-2 small-laptop:p-3 bg-gray-50 rounded">
+              <span className="text-sm small-laptop:text-base text-gray-700">Password Changes</span>
+              <span className="text-xl small-laptop:text-2xl font-bold text-gray-800">{user_activity.password_changes}</span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-              <span className="text-gray-700">Username Changes</span>
-              <span className="text-2xl font-bold text-gray-800">{user_activity.username_changes}</span>
+            <div className="flex justify-between items-center p-2 small-laptop:p-3 bg-gray-50 rounded">
+              <span className="text-sm small-laptop:text-base text-gray-700">Username Changes</span>
+              <span className="text-xl small-laptop:text-2xl font-bold text-gray-800">{user_activity.username_changes}</span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-              <span className="text-gray-700">Profile Updates</span>
-              <span className="text-2xl font-bold text-gray-800">{user_activity.profile_updates}</span>
+            <div className="flex justify-between items-center p-2 small-laptop:p-3 bg-gray-50 rounded">
+              <span className="text-sm small-laptop:text-base text-gray-700">Profile Updates</span>
+              <span className="text-xl small-laptop:text-2xl font-bold text-gray-800">{user_activity.profile_updates}</span>
             </div>
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-              <span className="text-gray-700">Profile Save Attempts</span>
-              <span className="text-2xl font-bold text-gray-800">{user_activity.profile_save_attempts}</span>
+            <div className="flex justify-between items-center p-2 small-laptop:p-3 bg-gray-50 rounded">
+              <span className="text-sm small-laptop:text-base text-gray-700">Profile Save Attempts</span>
+              <span className="text-xl small-laptop:text-2xl font-bold text-gray-800">{user_activity.profile_save_attempts}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Detailed Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-red-800 mb-2">Security Metrics</h3>
-          <ul className="space-y-2 text-sm">
+      <div className="grid grid-cols-1 small-laptop:grid-cols-2 normal-laptop:grid-cols-3 gap-3 small-laptop:gap-4">
+        <div className="bg-gradient-to-br from-red-50 to-red-100 p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
+          <h3 className="text-base small-laptop:text-lg font-semibold text-red-800 mb-2">Security Metrics</h3>
+          <ul className="space-y-2 text-xs small-laptop:text-sm">
             <li className="flex justify-between">
               <span className="text-gray-700">High Risk:</span>
               <span className="font-bold text-red-600">{security_metrics.high_risk_connections}</span>
@@ -703,9 +703,9 @@ const Analytics = () => {
           </ul>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-blue-800 mb-2">Connection Stats</h3>
-          <ul className="space-y-2 text-sm">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
+          <h3 className="text-base small-laptop:text-lg font-semibold text-blue-800 mb-2">Connection Stats</h3>
+          <ul className="space-y-2 text-xs small-laptop:text-sm">
             <li className="flex justify-between">
               <span className="text-gray-700">Total Connections:</span>
               <span className="font-bold">{connection_stats.total_connections}</span>
@@ -725,9 +725,9 @@ const Analytics = () => {
           </ul>
         </div>
 
-        <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-green-800 mb-2">List Management</h3>
-          <ul className="space-y-2 text-sm">
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
+          <h3 className="text-base small-laptop:text-lg font-semibold text-green-800 mb-2">List Management</h3>
+          <ul className="space-y-2 text-xs small-laptop:text-sm">
             <li className="flex justify-between">
               <span className="text-gray-700">Blacklisted:</span>
               <span className="font-bold text-red-600">{blacklist_whitelist.total_blacklisted}</span>

@@ -66,6 +66,7 @@ console.log(siteKey);
         loginUser({
           user: { id: response.user_id, username: response.username ?? null },
           token: response.token,
+          refresh_token: response.refresh_token,
         })
       )
 
@@ -90,11 +91,11 @@ console.log(siteKey);
   }
 
   return (
-    <div className="flex h-screen w-full justify-center items-center bg-gray-100">
-      <div className="bg-white shadow-xl rounded-lg p-8 w-[360px]">
+    <div className="flex h-screen w-full justify-center items-center bg-gray-100 p-4">
+      <div className="bg-white shadow-xl rounded-lg p-6 small-laptop:p-8 w-full max-w-[360px] normal-laptop:max-w-[400px] large-laptop:max-w-[420px]">
         {step === 'register' ? (
           <>
-            <h2 className="text-2xl font-semibold mb-6 text-center">Create account</h2>
+            <h2 className="text-xl small-laptop:text-2xl font-semibold mb-4 small-laptop:mb-6 text-center">Create account</h2>
             <form onSubmit={handleRegister} className="flex flex-col gap-4">
               <div className="flex flex-col">
                 <label className="text-sm font-medium text-gray-700">Email</label>

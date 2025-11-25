@@ -91,10 +91,12 @@ const HomeLayout = ()=> {
   // }, [addNotification])
 
   return (
-    <div className="bg-primary h-screen">
-      <div className="flex">
+    <div className="bg-primary h-screen overflow-hidden">
+      <div className="flex h-full">
         <Navbar data={navLink} />
-        <Outlet />
+        <div className="flex-1 overflow-auto">
+          <Outlet />
+        </div>
       </div>
       {/* Real-time monitoring feature - COMMENTED OUT (will be re-enabled in future) */}
       {/* <NotificationCenter notifications={notifications} onRemove={removeNotification} /> */}

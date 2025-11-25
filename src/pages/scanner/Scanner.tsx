@@ -29,6 +29,7 @@ const Scanner: FC = () => {
     high: 'H',
     medium: 'M',
     low: 'L',
+    wl: 'WL',
     whitelist: 'WL',
     whitelisted: 'WL',
   }
@@ -229,8 +230,11 @@ const Scanner: FC = () => {
         risk: localWhitelist.includes(item.bssid.toLowerCase()) ? 'WL' : item.risk,
       }))
       .filter(item => {
-        // Apply profile filters if profile exists
-        if (profile) {
+        // Whitelisted networks always bypass profile filters - they should always be shown
+        const isWhitelisted = item.risk === 'WL'
+        
+        // Apply profile filters if profile exists and network is not whitelisted
+        if (profile && !isWhitelisted) {
           // Calculate effective values based on preferences
           const effectiveMinSignal = getEffectiveMinSignal(
             profile.min_signal_strength,
@@ -295,40 +299,48 @@ const Scanner: FC = () => {
         }
 
         // Apply manual risk filter
-        if (chipMappedRisk && item.risk !== chipMappedRisk) return false
+        if (chipMappedRisk && item.risk !== chipMappedRisk) {
+          // Only show networks that match the selected risk filter
+          // WL networks should only show when "Whitelisted" filter is explicitly selected
+          return false
+        }
 
         // Apply search term filter
         if (!term) return true
 
-        const matchesRisk = mappedRisk ? item.risk?.toLowerCase() === mappedRisk.toLowerCase() : false
+        // Check if search term matches the risk level
+        const matchesRisk = mappedRisk ? item.risk === mappedRisk : false
+        // Also check if searching for WL networks by searching for "wl", "whitelist", or "whitelisted"
+        const matchesWLSearch = !mappedRisk && (term === 'wl' || term === 'whitelist' || term === 'whitelisted') && item.risk === 'WL'
+        
         const matchesText =
           item.ssid?.toLowerCase().includes(term) ||
           item.authentication?.toLowerCase().includes(term) ||
           item.encryption?.toLowerCase().includes(term) ||
           item.bssid?.toLowerCase().includes(term)
 
-        return matchesRisk || matchesText
+        return matchesRisk || matchesWLSearch || matchesText
       })
   }
 
 
   return (
-    <div className="p-5 w-full">
-      <h1 className="font-bold text-[20px] mb-[10px]">Wireless Intrusion Prevention System</h1>
+    <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full max-w-full">
+      <h1 className="font-bold text-lg small-laptop:text-xl normal-laptop:text-[20px] mb-2 small-laptop:mb-[10px]">Wireless Intrusion Prevention System</h1>
       {!!activeNetwork?.ssid &&
         <div className="relative">
           <div onClick={onIsActive}
-               className="bg-secondary text-white p-4 mb-4 rounded-t shadow flex justify-between items-center cursor-pointer">
-            <div>
-              <p className="font-semibold">Connected to: <span className="text-green-300">{activeNetwork.ssid}</span>
+               className="bg-secondary text-white p-3 small-laptop:p-4 mb-3 small-laptop:mb-4 rounded-t shadow flex flex-col small-laptop:flex-row justify-between items-start small-laptop:items-center gap-2 small-laptop:gap-0 cursor-pointer">
+            <div className="flex-1">
+              <p className="font-semibold text-sm small-laptop:text-base">Connected to: <span className="text-green-300">{activeNetwork.ssid}</span>
               </p>
             </div>
-            <div className="w-[120px]">
-              <Button onClick={disconnect} variant="red">Disconnect</Button>
+            <div className="w-full small-laptop:w-[120px]">
+              <Button onClick={disconnect} variant="red" className="w-full small-laptop:w-auto">Disconnect</Button>
             </div>
           </div>
           {isActive &&
-            <div className="bg-[rgb(70,8,118)] text-white p-5 rounded-b shadow absolute top-[72px] left-0 z-10">
+            <div className="bg-[rgb(70,8,118)] text-white p-4 small-laptop:p-5 rounded-b shadow absolute top-[auto] small-laptop:top-[72px] left-0 right-0 small-laptop:right-auto z-10">
               <p className="font-bold">BSSID: <span className="font-normal">{activeNetwork.bssid}</span></p>
               <p className="font-bold">Signal: <span className="font-normal">{activeNetwork.signal}</span></p>
               <p className="font-bold">Risk: <Chip risk={activeNetwork.risk} /></p>
@@ -339,21 +351,21 @@ const Scanner: FC = () => {
             </div>}
         </div>
       }
-      <div className="w-[100px] mb-5 mt-5">
+      <div className="w-full small-laptop:w-[100px] mb-3 small-laptop:mb-5 mt-3 small-laptop:mt-5">
         <Button variant="secondary" onClick={scanWifi}>
           {isScanning ? 'Scanning...' : 'Scan'}
         </Button>
       </div>
-      <div className="mb-4">
+      <div className="mb-3 small-laptop:mb-4">
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search by SSID, Encryption, Authentication, or Risk"
-          className="px-4 py-2 rounded w-full border border-gray-300 focus:outline-none focus:ring focus:border-blue-400"
+          className="px-3 small-laptop:px-4 py-2 rounded w-full text-sm small-laptop:text-base border border-gray-300 focus:outline-none focus:ring focus:border-blue-400"
         />
       </div>
-      <div className="flex gap-2 mb-5 flex-wrap">
+      <div className="flex gap-2 mb-3 small-laptop:mb-5 flex-wrap">
         <button
           onClick={() => setActiveRiskFilter(null)}
           className={`px-3 py-1 rounded-full text-sm border ${
@@ -374,8 +386,8 @@ const Scanner: FC = () => {
           </button>
         ))}
       </div>
-      <div>
-        <Table tableTitle={tableTitle} notDataFound={!networks.length} minH='min-h-[400px]' maxH='max-h-[400px]'>
+      <div className="overflow-x-auto">
+        <Table tableTitle={tableTitle} notDataFound={!networks.length} minH='min-h-[300px] small-laptop:min-h-[400px]' maxH='max-h-[400px]'>
           {filterOnActiveNetwork()?.map((row, index) => (
             <TableScanner
               key={index}

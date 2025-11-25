@@ -18,6 +18,7 @@
     "@tauri-apps/plugin-store": "^2.2.0",
     "chart.js": "^4.5.1",
     "formik": "^2.4.6",
+    "js-cookie": "^3.0.5",
     "react": "^18.3.1",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^18.3.1",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
+    "@types/js-cookie": "^3.0.6",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
     "@types/react-google-recaptcha": "^2.1.8",

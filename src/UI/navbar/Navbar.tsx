@@ -1,10 +1,13 @@
 import { FC } from 'react'
 import { LinkItemType } from 'types'
 import { NavItem } from './nav-item'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from 'store/store'
-import { useLocation, NavLink } from 'react-router-dom'
+import { logoutUser } from 'store/reducers/user.slice'
+import { useLocation, NavLink, useNavigate } from 'react-router-dom'
 import { ROUTES } from 'routes/routes.utils'
+import { useLogoutMutation } from 'store/api'
+import { cookieUtils } from 'utils/cookies'
 
 interface NavbarProps {
   data: LinkItemType[]
@@ -12,21 +15,62 @@ interface NavbarProps {
 
 const Navbar: FC<NavbarProps> = ({ data }) => {
   const user = useSelector((state: RootState) => state.user.user)
+  const refresh_token = useSelector((state: RootState) => state.user.refresh_token)
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
   const { pathname } = useLocation()
   const isProfileActive = pathname === ROUTES.PROFILE
+  const [logout] = useLogoutMutation()
+
+  const handleLogout = async () => {
+    try {
+      // Attempt to revoke refresh token on server
+      // Pass refresh_token if available, otherwise revoke all tokens for the user
+      await logout({ refresh_token: refresh_token || undefined }).unwrap()
+    } catch (error) {
+      // Log error but continue with logout anyway (fail gracefully)
+      console.error('Failed to revoke refresh token on server:', error)
+    } finally {
+      // Always clear local state and navigate to login
+      dispatch(logoutUser())
+      navigate(ROUTES.LOGIN)
+    }
+  }
 
   return (
-    <nav className="bg-secondary h-screen w-[20%] flex flex-col">
+    <nav className="bg-secondary h-screen w-[25%] small-laptop:w-[22%] normal-laptop:w-[20%] large-laptop:w-[18%] wide-screen:w-[16%] flex flex-col">
       <div className="flex-1">
         {data.map((item) => <NavItem key={item.link} data={item} />)}
       </div>
       <NavLink
         to={ROUTES.PROFILE}
-        className={`block text-[14px] p-[15px] font-medium transition border-t border-gray-700 ${
+        className={`block text-xs small-laptop:text-sm normal-laptop:text-[14px] p-3 small-laptop:p-[12px] normal-laptop:p-[15px] font-medium transition border-t border-gray-700 ${
           isProfileActive
             ? 'bg-[rgba(255,255,255,0.1)] text-white border-l-[4px] border-[#3e3caa]'
             : 'text-gray-300 hover:bg-[rgba(255,255,255,0.1)] hover:text-white'
         }`}
+      >
+        <div className="flex items-center gap-2">
+          <svg
+            className="w-4 h-4 small-laptop:w-[18px] small-laptop:h-[18px] normal-laptop:w-5 normal-laptop:h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            />
+          </svg>
+          <span className="truncate">{user?.username || 'Profile'}</span>
+        </div>
+      </NavLink>
+      <button
+        onClick={handleLogout}
+        className="block w-full text-left text-xs small-laptop:text-sm normal-laptop:text-[14px] p-3 small-laptop:p-[12px] normal-laptop:p-[15px] font-medium transition border-t border-gray-700 text-gray-300 hover:bg-[rgba(255,255,255,0.1)] hover:text-white"
       >
         <div className="flex items-center gap-2">
           <svg
@@ -40,12 +84,12 @@ const Navbar: FC<NavbarProps> = ({ data }) => {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
             />
           </svg>
-          <span>{user?.username || 'Profile'}</span>
+          <span>Logout</span>
         </div>
-      </NavLink>
+      </button>
     </nav>
   )
 }

@@ -32,11 +32,12 @@ console.log(siteKey);
       const response = await login({ email, password, captcha_token: captchaToken }).unwrap()
       console.log('Registration response:', response)
 
-      // Save user & token
+      // Save user & tokens
       dispatch(
         loginUser({
           user: { id: response.user_id, username: response.username ?? null },
           token: response.token,
+          refresh_token: response.refresh_token,
         })
       )
 
@@ -48,13 +49,16 @@ console.log(siteKey);
       console.error('Login error:', err)
       // Backend returns {"error": "..."} for failed login
       setError(err?.data?.error || 'Login failed. Please try again.')
+      // Reset captcha on failed login so user must complete it again
+      recaptchaRef.current?.reset()
+      setCaptchaToken(null)
     }
   }
 
   return (
-    <div className="flex h-screen w-full justify-center items-center bg-gray-100">
-      <div className="bg-white shadow-xl rounded-lg p-8 w-[350px]">
-        <h2 className="text-2xl font-semibold mb-6 text-center">Login</h2>
+    <div className="flex h-screen w-full justify-center items-center bg-gray-100 p-4">
+      <div className="bg-white shadow-xl rounded-lg p-6 small-laptop:p-8 w-full max-w-[350px] normal-laptop:max-w-[380px] large-laptop:max-w-[400px]">
+        <h2 className="text-xl small-laptop:text-2xl font-semibold mb-4 small-laptop:mb-6 text-center">Login</h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col">

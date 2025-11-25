@@ -8,6 +8,7 @@ export {
   useResendVerificationMutation,
   useResetPasswordRequestMutation,
   useResetPasswordConfirmMutation,
+  useLogoutMutation,
 } from './auth.api'
 export { useGetLogsQuery, useExportLogsQuery, useLazyExportLogsQuery, useAddLogMutation } from './logs.api'
 export {

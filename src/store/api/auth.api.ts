@@ -3,7 +3,7 @@ import { api } from './api'
 export const auth = api.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<
-      { token: string; user_id: string; username?: string },
+      { token: string; refresh_token: string; user_id: string; username?: string },
       { email: string; password: string; captcha_token: string }
     >({
       query: (credentials) => ({
@@ -12,8 +12,18 @@ export const auth = api.injectEndpoints({
         body: credentials,
       }),
     }),
+    refreshToken: builder.mutation<
+      { token: string; refresh_token: string },
+      { refresh_token: string }
+    >({
+      query: (body) => ({
+        url: '/auth/refresh',
+        method: 'POST',
+        body,
+      }),
+    }),
     verifyEmail: builder.mutation<
-      { verified: boolean; token: string; user_id: string; username?: string },
+      { verified: boolean; token: string; refresh_token: string; user_id: string; username?: string },
       { email: string; code: string }
     >({
       query: (data) => ({
@@ -59,14 +69,26 @@ export const auth = api.injectEndpoints({
         body: data,
       }),
     }),
+    logout: builder.mutation<
+      { status: string; message?: string },
+      { refresh_token?: string }
+    >({
+      query: (data) => ({
+        url: '/auth/logout',
+        method: 'POST',
+        body: data,
+      }),
+    }),
   }),
 })
 
 export const {
   useLoginMutation,
+  useRefreshTokenMutation,
   useRegisterMutation,
   useVerifyEmailMutation,
   useResendVerificationMutation,
   useResetPasswordRequestMutation,
   useResetPasswordConfirmMutation,
+  useLogoutMutation,
 } = auth

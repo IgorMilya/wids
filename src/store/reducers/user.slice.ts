@@ -1,4 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { cookieUtils } from '../../utils/cookies'
+import { jwtUtils } from '../../utils/jwt'
 
 interface StoredUser {
   id: string
@@ -8,12 +10,35 @@ interface StoredUser {
 interface UserState {
   user: StoredUser | null
   token: string | null
+  refresh_token: string | null
 }
 
-const initialState: UserState = {
-  user: JSON.parse(localStorage.getItem("user") || "null"),
-  token: localStorage.getItem("token"),
+// Initialize state from cookies and JWT token
+const getInitialState = (): UserState => {
+  const token = cookieUtils.getToken() || null
+  const refresh_token = cookieUtils.getRefreshToken() || null
+  
+  // Extract user data from JWT token if available
+  let user: StoredUser | null = null
+  if (token) {
+    const userId = jwtUtils.getUserId(token)
+    const username = jwtUtils.getUsername(token)
+    if (userId) {
+      user = {
+        id: userId,
+        username: username || null,
+      }
+    }
+  }
+  
+  return {
+    user,
+    token,
+    refresh_token,
+  }
 }
+
+const initialState: UserState = getInitialState()
 
 const userSlice = createSlice({
   name: 'user',
@@ -21,30 +46,67 @@ const userSlice = createSlice({
   reducers: {
     loginUser: (
       state,
-      action: PayloadAction<{ user: StoredUser; token: string }>
+      action: PayloadAction<{ user: StoredUser; token: string; refresh_token: string }>
     ) => {
-      state.user = action.payload.user
       state.token = action.payload.token
+      state.refresh_token = action.payload.refresh_token
 
-      localStorage.setItem("user", JSON.stringify(action.payload.user))
-      localStorage.setItem("token", action.payload.token)
+      // Store tokens in cookies (not localStorage)
+      cookieUtils.setToken(action.payload.token)
+      cookieUtils.setRefreshToken(action.payload.refresh_token)
+      
+      // Extract user data from JWT token as source of truth (don't store user data separately)
+      const userId = jwtUtils.getUserId(action.payload.token)
+      const username = jwtUtils.getUsername(action.payload.token)
+      if (userId) {
+        state.user = {
+          id: userId,
+          username: username || action.payload.user.username || null,
+        }
+      } else {
+        // Fallback to action payload if JWT decode fails (shouldn't happen)
+        state.user = action.payload.user
+      }
+    },
+
+    setTokens: (
+      state,
+      action: PayloadAction<{ token: string; refresh_token: string }>
+    ) => {
+      state.token = action.payload.token
+      state.refresh_token = action.payload.refresh_token
+
+      // Store tokens in cookies
+      cookieUtils.setToken(action.payload.token)
+      cookieUtils.setRefreshToken(action.payload.refresh_token)
+      
+      // Extract user data from new JWT token
+      const userId = jwtUtils.getUserId(action.payload.token)
+      const username = jwtUtils.getUsername(action.payload.token)
+      if (userId) {
+        state.user = {
+          id: userId,
+          username: username || state.user?.username || null,
+        }
+      }
     },
 
     logoutUser: (state) => {
       state.user = null
       state.token = null
+      state.refresh_token = null
 
-      localStorage.removeItem("user")
-      localStorage.removeItem("token")
+      // Remove tokens from cookies
+      cookieUtils.removeTokens()
     },
     updateUsername: (state, action: PayloadAction<string>) => {
       if (state.user) {
         state.user.username = action.payload
-        localStorage.setItem("user", JSON.stringify(state.user))
+        // Don't store in localStorage, keep only in Redux state
       }
     },
   },
 })
 
-export const { loginUser, logoutUser, updateUsername } = userSlice.actions
+export const { loginUser, logoutUser, updateUsername, setTokens } = userSlice.actions
 export default userSlice.reducer

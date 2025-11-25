@@ -444,8 +444,8 @@ const Profile: FC = () => {
 
   if (isLoading) {
     return (
-      <div className="p-5 w-full">
-        <h1 className="font-bold text-[20px] mb-[10px]">Profile Settings</h1>
+      <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full max-w-full">
+        <h1 className="font-bold text-lg small-laptop:text-xl mb-2 small-laptop:mb-[10px]">Profile Settings</h1>
         <p>Loading...</p>
       </div>
     )
@@ -458,17 +458,17 @@ const Profile: FC = () => {
   ]
 
   return (
-    <div className="p-5 w-full max-w-4xl">
-      <h1 className="font-bold text-[20px] mb-6">Profile Settings</h1>
+    <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full max-w-full large-laptop:max-w-4xl">
+      <h1 className="font-bold text-lg small-laptop:text-xl normal-laptop:text-[20px] mb-4 small-laptop:mb-5 normal-laptop:mb-6">Profile Settings</h1>
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="flex space-x-8" aria-label="Tabs">
+      <div className="border-b border-gray-200 mb-4 small-laptop:mb-5 normal-laptop:mb-6 overflow-x-auto">
+        <nav className="flex space-x-4 small-laptop:space-x-6 normal-laptop:space-x-8 min-w-max" aria-label="Tabs">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-3 small-laptop:py-4 px-1 border-b-2 font-medium text-xs small-laptop:text-sm whitespace-nowrap transition-colors ${
                 activeTab === tab.id
                   ? 'border-[#3e3caa] text-[#3e3caa]'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -481,11 +481,11 @@ const Profile: FC = () => {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-lg shadow p-4 small-laptop:p-5 normal-laptop:p-6">
         {/* Network Profiling Preferences Tab */}
         {activeTab === 'network' && (
           <div>
-            <h2 className="text-lg font-semibold mb-4">Network Profiling Preferences</h2>
+            <h2 className="text-base small-laptop:text-lg font-semibold mb-3 small-laptop:mb-4">Network Profiling Preferences</h2>
 
         <div className="mb-4">
           <label className="block text-sm font-medium mb-2">Profiling Preference</label>

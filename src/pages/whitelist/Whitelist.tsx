@@ -32,23 +32,23 @@ const Whitelist = () => {
   const onToggle = (index: number) => setOpenIndex(openIndex === index ? null : index)
 
   return (
-    <div className="p-5 w-full">
-      <h1 className="text-xl font-bold mb-4">Whitelist</h1>
+    <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full max-w-full">
+      <h1 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4">Whitelist</h1>
 
       {/* Search Bar */}
-      <div className="mb-4">
+      <div className="mb-3 small-laptop:mb-4 flex flex-col small-laptop:flex-row gap-2">
         <input
           type="text"
           placeholder="Search by SSID..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="border px-3 py-2 rounded w-full max-w-md"
+          className="border px-3 py-2 rounded w-full small-laptop:max-w-md text-sm small-laptop:text-base"
         />
         <input
           type="date"
           value={searchDate}
           onChange={e => setSearchDate(e.target.value)}
-          className="border px-3 py-2 rounded max-w-xs"
+          className="border px-3 py-2 rounded w-full small-laptop:w-auto small-laptop:max-w-xs text-sm small-laptop:text-base"
         />
       </div>
 
