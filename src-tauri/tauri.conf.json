@@ -5,7 +5,7 @@
   "identifier": "com.wips-ui.app",
   "build": {
     "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "https://wisp-server-ivory.vercel.app",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
