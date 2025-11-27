@@ -336,7 +336,7 @@ const Scanner: FC = () => {
               </p>
             </div>
             <div className="w-full small-laptop:w-[120px]">
-              <Button onClick={disconnect} variant="red" className="w-full small-laptop:w-auto">Disconnect</Button>
+              <Button onClick={disconnect} variant="red" >Disconnect</Button>
             </div>
           </div>
           {isActive &&

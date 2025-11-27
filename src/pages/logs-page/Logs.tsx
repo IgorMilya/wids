@@ -162,7 +162,6 @@ const Logs = () => {
           type="button" 
           variant="outline"
           disabled={isExporting || isExportLoading}
-          className="w-full small-laptop:w-auto"
         >
           {isExporting || isExportLoading ? 'Exporting...' : 'Export All CSV'}
         </Button>
