@@ -1,4 +1,4 @@
-# Wireless Intrusion Prevention System
+# Wireless Intrusion Detection System
 
 ## 📌 Project Description
 **WIPS** is a feature-rich desktop application framework that leverages React, Tauri, and Rust to deliver powerful Wi-Fi management and security tools. Designed for developers, it simplifies building cross-platform, secure desktop apps with a modern user interface. The core features include:
