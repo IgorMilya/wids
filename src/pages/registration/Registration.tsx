@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Form, Formik, FormikHelpers } from 'formik'
 import {
   useRegisterMutation,
   useVerifyEmailMutation,
@@ -9,6 +10,22 @@ import { useDispatch } from 'react-redux'
 import { loginUser } from 'store/reducers/user.slice'
 import { ROUTES } from 'routes/routes.utils'
 import ReCAPTCHA from 'react-google-recaptcha'
+import { Input } from 'UI'
+import {
+  registerInitialValues,
+  registerValidationSchema,
+  verifyInitialValues,
+  verifyValidationSchema,
+} from './RegistrationForm.utils'
+
+interface RegisterFormValues {
+  email: string
+  password: string
+}
+
+interface VerifyFormValues {
+  code: string
+}
 
 export const Registration = () => {
   const navigate = useNavigate()
@@ -20,17 +37,16 @@ export const Registration = () => {
 
   const [step, setStep] = useState<'register' | 'verify'>('register')
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const recaptchaRef = useRef<ReCAPTCHA | null>(null)
   const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || ''
-console.log(siteKey);
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleRegister = async (
+    values: RegisterFormValues,
+    actions: FormikHelpers<RegisterFormValues>
+  ) => {
     setError('')
     setInfo('')
 
@@ -40,27 +56,36 @@ console.log(siteKey);
     }
 
     try {
-      const response = await register({ email, password, captcha_token: captchaToken }).unwrap()
+      const response = await register({
+        email: values.email,
+        password: values.password,
+        captcha_token: captchaToken,
+      }).unwrap()
+
       console.log('Registration response:', response)
 
       recaptchaRef.current?.reset()
       setCaptchaToken(null)
+      setEmail(values.email) // Store email for verification step
 
       setStep('verify')
       setInfo('Verification code sent to your email.')
     } catch (err: any) {
       console.error(err)
       setError(err?.data?.error || 'Registration failed. Please try again.')
+      // Keep form values - Formik preserves them automatically
     }
   }
 
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleVerify = async (
+    values: VerifyFormValues,
+    actions: FormikHelpers<VerifyFormValues>
+  ) => {
     setError('')
     setInfo('')
 
     try {
-      const response = await verifyEmail({ email, code }).unwrap()
+      const response = await verifyEmail({ email, code: values.code }).unwrap()
 
       dispatch(
         loginUser({
@@ -74,6 +99,7 @@ console.log(siteKey);
     } catch (err: any) {
       console.error(err)
       setError(err?.data?.error || 'Verification failed. Please try again.')
+      // Keep form values - Formik preserves them automatically
     }
   }
 
@@ -95,62 +121,70 @@ console.log(siteKey);
       <div className="bg-white shadow-xl rounded-lg p-6 small-laptop:p-8 w-full max-w-[360px] normal-laptop:max-w-[400px] large-laptop:max-w-[420px]">
         {step === 'register' ? (
           <>
-            <h2 className="text-xl small-laptop:text-2xl font-semibold mb-4 small-laptop:mb-6 text-center">Create account</h2>
-            <form onSubmit={handleRegister} className="flex flex-col gap-4">
-              <div className="flex flex-col">
-                <label className="text-sm font-medium text-gray-700">Email</label>
-                <input
+            <h2 className="text-xl small-laptop:text-2xl font-semibold mb-4 small-laptop:mb-6 text-center">
+              Create account
+            </h2>
+            <Formik
+              initialValues={registerInitialValues}
+              validationSchema={registerValidationSchema}
+              onSubmit={handleRegister}
+            >
+              <Form className="flex flex-col gap-4">
+                <Input
+                  name="email"
+                  labelText="Email"
                   type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-blue-300"
+                  placeholder="Enter your email"
                 />
-              </div>
 
-              <div className="flex flex-col">
-                <label className="text-sm font-medium text-gray-700">Password</label>
-                <input
+                <Input
+                  name="password"
+                  labelText="Password"
                   type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-blue-300"
+                  placeholder="Enter your password"
                 />
-              </div>
 
-              {error && <div className="text-red-600 text-sm text-center">{error}</div>}
-              {info && <div className="text-green-600 text-sm text-center">{info}</div>}
+                {error && (
+                  <div className="text-red-600 text-sm text-center bg-red-50 border border-red-200 rounded px-3 py-2">
+                    {error}
+                  </div>
+                )}
+                {info && (
+                  <div className="text-green-600 text-sm text-center bg-green-50 border border-green-200 rounded px-3 py-2">
+                    {info}
+                  </div>
+                )}
 
-              {siteKey ? (
-                <ReCAPTCHA
-                  sitekey={siteKey}
-                  ref={recaptchaRef}
-                  onChange={(token: string | null) => setCaptchaToken(token)}
-                  onExpired={() => setCaptchaToken(null)}
-                />
-              ) : (
-                <div className="text-red-600 text-sm text-center">
-                  reCAPTCHA key missing. Set VITE_RECAPTCHA_SITE_KEY.
-                </div>
-              )}
+                {siteKey ? (
+                  <ReCAPTCHA
+                    sitekey={siteKey}
+                    ref={recaptchaRef}
+                    onChange={(token: string | null) => setCaptchaToken(token)}
+                    onExpired={() => setCaptchaToken(null)}
+                  />
+                ) : (
+                  <div className="text-red-600 text-sm text-center">
+                    reCAPTCHA key missing. Set VITE_RECAPTCHA_SITE_KEY.
+                  </div>
+                )}
 
-              <button
-                type="submit"
-                disabled={isRegistering}
-                className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition disabled:bg-gray-400"
-              >
-                {isRegistering ? 'Registering…' : 'Register'}
-              </button>
+                <button
+                  type="submit"
+                  disabled={isRegistering}
+                  className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition disabled:bg-gray-400"
+                >
+                  {isRegistering ? 'Registering…' : 'Register'}
+                </button>
 
-              <button
-                type="button"
-                onClick={() => navigate(ROUTES.LOGIN)}
-                className="text-sm text-blue-600 hover:underline"
-              >
-                Already have an account? Login
-              </button>
-            </form>
+                <button
+                  type="button"
+                  onClick={() => navigate(ROUTES.LOGIN)}
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  Already have an account? Login
+                </button>
+              </Form>
+            </Formik>
           </>
         ) : (
           <>
@@ -158,29 +192,39 @@ console.log(siteKey);
             <p className="text-sm text-gray-600 mb-4 text-center">
               Enter the 6-digit code sent to <strong>{email}</strong>
             </p>
-            <form onSubmit={handleVerify} className="flex flex-col gap-4">
-              <div className="flex flex-col">
-                <label className="text-sm font-medium text-gray-700">Verification code</label>
-                <input
+            <Formik
+              initialValues={verifyInitialValues}
+              validationSchema={verifyValidationSchema}
+              onSubmit={handleVerify}
+            >
+              <Form className="flex flex-col gap-4">
+                <Input
+                  name="code"
+                  labelText="Verification code"
                   type="text"
-                  required
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-blue-300"
+                  placeholder="Enter 6-digit code"
                 />
-              </div>
 
-              {error && <div className="text-red-600 text-sm text-center">{error}</div>}
-              {info && <div className="text-green-600 text-sm text-center">{info}</div>}
+                {error && (
+                  <div className="text-red-600 text-sm text-center bg-red-50 border border-red-200 rounded px-3 py-2">
+                    {error}
+                  </div>
+                )}
+                {info && (
+                  <div className="text-green-600 text-sm text-center bg-green-50 border border-green-200 rounded px-3 py-2">
+                    {info}
+                  </div>
+                )}
 
-              <button
-                type="submit"
-                disabled={isVerifying}
-                className="bg-green-600 text-white py-2 rounded hover:bg-green-700 transition disabled:bg-gray-400"
-              >
-                {isVerifying ? 'Verifying…' : 'Verify & Continue'}
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={isVerifying}
+                  className="bg-green-600 text-white py-2 rounded hover:bg-green-700 transition disabled:bg-gray-400"
+                >
+                  {isVerifying ? 'Verifying…' : 'Verify & Continue'}
+                </button>
+              </Form>
+            </Formik>
 
             <button
               type="button"
@@ -206,4 +250,3 @@ console.log(siteKey);
 }
 
 export default Registration
-

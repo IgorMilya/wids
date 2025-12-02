@@ -59,16 +59,16 @@ const Logs = () => {
     if (isExporting && exportData) {
       // CSV header
       const headers = ['SSID', 'BSSID', 'Action', 'Timestamp', 'Details'];
-      
+
       if (exportData.logs.length === 0) {
         alert('No logs found matching the current filters');
         setIsExporting(false);
         return;
       }
-      
+
       // Sorting is done server-side, so we just use exportData.logs directly
       const exportLogs = exportData.logs;
-      
+
       const rows = exportLogs.map(log => [
         log.network_ssid,
         log.network_bssid || '-',
@@ -100,14 +100,14 @@ const Logs = () => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       setIsExporting(false);
     }
   }, [exportData, isExporting, sortConfig, debouncedSearchTerm, searchAction, searchDateFrom, searchDateTill])
 
   const exportToCSV = async () => {
     setIsExporting(true);
-    
+
     // Fetch all logs based on current filters
     await triggerExport({
       ssid: debouncedSearchTerm.trim() || undefined,
@@ -127,72 +127,88 @@ const Logs = () => {
       <h1 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4">User Logs</h1>
 
       <div className="mb-3 small-laptop:mb-4 flex flex-col small-laptop:flex-row gap-2 flex-wrap">
-        <input 
-          type="text" 
-          placeholder="SSID" 
-          value={searchTerm} 
+        <input
+          type="text"
+          placeholder="SSID"
+          value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className="border px-3 py-2 rounded w-full small-laptop:w-auto flex-1 min-w-[150px] text-sm small-laptop:text-base" 
+          className="border px-3 py-2 rounded w-full small-laptop:w-auto flex-1 min-w-[150px] text-sm small-laptop:text-base"
         />
-        <input 
-          type="text" 
-          placeholder="Action" 
-          value={searchAction} 
+        <input
+          type="text"
+          placeholder="Action"
+          value={searchAction}
           onChange={e => setSearchAction(e.target.value)}
-          className="border px-3 py-2 rounded w-full small-laptop:w-auto flex-1 min-w-[150px] text-sm small-laptop:text-base" 
+          className="border px-3 py-2 rounded w-full small-laptop:w-auto flex-1 min-w-[150px] text-sm small-laptop:text-base"
         />
-        <input 
-          type="date" 
-          placeholder="Date From" 
-          value={searchDateFrom} 
+        <input
+          type="date"
+          placeholder="Date From"
+          value={searchDateFrom}
           onChange={e => setSearchDateFrom(e.target.value)}
-          className="border px-3 py-2 rounded w-full small-laptop:w-auto text-sm small-laptop:text-base" 
+          className="border px-3 py-2 rounded w-full small-laptop:w-auto text-sm small-laptop:text-base"
           title="Date From"
         />
-        <input 
-          type="date" 
-          placeholder="Date Till" 
-          value={searchDateTill} 
+        <input
+          type="date"
+          placeholder="Date Till"
+          value={searchDateTill}
           onChange={e => setSearchDateTill(e.target.value)}
-          className="border px-3 py-2 rounded w-full small-laptop:w-auto text-sm small-laptop:text-base" 
+          className="border px-3 py-2 rounded w-full small-laptop:w-auto text-sm small-laptop:text-base"
           title="Date Till"
         />
-        <Button 
-          onClick={exportToCSV} 
-          type="button" 
-          variant="outline"
-          disabled={isExporting || isExportLoading}
-        >
-          {isExporting || isExportLoading ? 'Exporting...' : 'Export All CSV'}
-        </Button>
+        <div>
+          <Button
+            onClick={exportToCSV}
+            type="button"
+            variant="outline"
+            disabled={isExporting || isExportLoading}
+          >
+            {isExporting || isExportLoading ? 'Exporting...' : 'Export All CSV'}
+          </Button>
+        </div>
       </div>
 
       {isError && <p className="text-red-500">{String(error)}</p>}
       {isLoading ? <p>Loading...</p> : (
         <Table tableTitle={['SSID', 'BSSID', 'Action', 'Timestamp', 'Details']} notDataFound={!sortedData.length}
-               onSort={handleSort} sortConfig={sortConfig}>
-          {sortedData.map((log ) => (
+          onSort={handleSort} sortConfig={sortConfig}>
+          {sortedData.map((log) => (
             <TableLogs log={log} key={log.id} />
           ))}
         </Table>
       )}
       {!!logs.length &&
         <div className="flex gap-2 mt-3 small-laptop:mt-4 items-center justify-center small-laptop:justify-start text-sm small-laptop:text-base">
-          <button 
-            disabled={page === 1} 
+          {/* <button
+            disabled={page === 1}
             onClick={() => setPage(page - 1)}
             className="px-3 py-1 rounded border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
           >
             Prev
-          </button>
+          </button> */}
+          <div>
+            <Button
+              onClick={() => setPage(page - 1)}
+              type="button"
+              variant="outline"
+              disabled={page === 1}
+            >
+              Prev
+            </Button>
+          </div>
           <span> {page} of {totalPages}</span>
-          <button 
-            disabled={page === totalPages} 
-            onClick={() => setPage(page + 1)}
-            className="px-3 py-1 rounded border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-          >
-            Next
-          </button>
+
+          <div>
+            <Button
+              onClick={() => setPage(page + 1)}
+              type="button"
+              variant="outline"
+              disabled={page === totalPages}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       }
     </div>
