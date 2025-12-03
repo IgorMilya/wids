@@ -8,6 +8,9 @@ import { loginUser } from 'store/reducers/user.slice'
 import { ROUTES } from 'routes/routes.utils'
 import { Input } from 'UI'
 import { initialValues, validationSchema } from './LoginForm.utils'
+import { getDeviceId } from 'utils/deviceId'
+import { saveNetworkCache } from 'utils/cacheManager'
+import { enableGuestMode } from 'utils/guestMode'
 
 interface LoginFormValues {
   email: string
@@ -53,6 +56,21 @@ export const Login = () => {
         })
       )
 
+      // Cache networks for offline use
+      try {
+        const deviceId = await getDeviceId()
+        console.log('deviceId', deviceId);
+        
+        // Fetch blacklist and whitelist to cache
+        // Note: We'll fetch these after login, but for now we'll cache empty arrays
+        // The actual cache will be updated when user navigates to Scanner
+        // For immediate cache, we could use the API directly here
+        await saveNetworkCache(deviceId, [], [])
+      } catch (error) {
+        console.error('Failed to cache networks:', error)
+        // Don't block login if cache fails
+      }
+
       recaptchaRef.current?.reset()
       setCaptchaToken(null)
 
@@ -65,6 +83,17 @@ export const Login = () => {
       recaptchaRef.current?.reset()
       setCaptchaToken(null)
       // Keep form values - Formik preserves them automatically
+    }
+  }
+
+  const handleGuestLogin = async () => {
+    try {
+      await enableGuestMode()
+      navigate(ROUTES.SCANNER)
+    } catch (error) {
+      console.error('Failed to enable guest mode:', error)
+      // Still navigate to scanner even if cache fails
+      navigate(ROUTES.SCANNER)
     }
   }
 
@@ -139,6 +168,18 @@ export const Login = () => {
           >
             Need an account? Register
           </button>
+          <div className="mt-2 pt-2 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={handleGuestLogin}
+              className="text-gray-600 hover:text-gray-800 font-medium"
+            >
+              Login as Guest
+            </button>
+            <p className="text-xs text-gray-500 mt-1">
+              Use offline mode with cached networks
+            </p>
+          </div>
         </div>
       </div>
     </div>

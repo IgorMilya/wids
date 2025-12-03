@@ -9,6 +9,7 @@ import {
 import { useDispatch } from 'react-redux'
 import { loginUser } from 'store/reducers/user.slice'
 import { ROUTES } from 'routes/routes.utils'
+import { enableGuestMode } from 'utils/guestMode'
 import ReCAPTCHA from 'react-google-recaptcha'
 import { Input } from 'UI'
 import {
@@ -116,6 +117,17 @@ export const Registration = () => {
     }
   }
 
+  const handleGuestLogin = async () => {
+    try {
+      await enableGuestMode()
+      navigate(ROUTES.SCANNER)
+    } catch (error) {
+      console.error('Failed to enable guest mode:', error)
+      // Still navigate to scanner even if cache fails
+      navigate(ROUTES.SCANNER)
+    }
+  }
+
   return (
     <div className="flex h-screen w-full justify-center items-center bg-gray-100 p-4">
       <div className="bg-white shadow-xl rounded-lg p-6 small-laptop:p-8 w-full max-w-[360px] normal-laptop:max-w-[400px] large-laptop:max-w-[420px]">
@@ -183,6 +195,18 @@ export const Registration = () => {
                 >
                   Already have an account? Login
                 </button>
+                <div className="mt-2 pt-2 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={handleGuestLogin}
+                    className="text-sm text-gray-600 hover:text-gray-800 font-medium"
+                  >
+                    Login as Guest
+                  </button>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Use offline mode with cached networks
+                  </p>
+                </div>
               </Form>
             </Formik>
           </>

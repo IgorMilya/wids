@@ -5,7 +5,11 @@ import { Provider } from 'react-redux'
 import { AppRouter } from 'routes'
 import { store } from 'store'
 import { setTokens, logoutUser } from 'store/reducers/user.slice'
+import { initializeApp } from 'utils/appInit'
 import './style/index.css'
+
+// Initialize app (check for temp user mode, load cached networks, etc.)
+initializeApp().catch(console.error)
 
 // Listen for token refresh events and update Redux store
 window.addEventListener('tokensRefreshed', ((event: CustomEvent<{ token: string; refresh_token: string }>) => {

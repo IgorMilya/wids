@@ -18,6 +18,24 @@ const baseQueryWithReauth: BaseQueryFn<
   FetchBaseQueryError
 > = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions)
+  
+  // Handle network errors gracefully for temp users
+  if (result.error) {
+    // Use api.getState() instead of importing store to avoid circular dependency
+    const state = api.getState() as { user: { isTempUser: boolean } }
+    const isTempUser = state.user.isTempUser
+    
+    // If temp user and network error, fail silently (don't show error toast)
+    if (isTempUser && (result.error.status === 'FETCH_ERROR' || result.error.status === 'PARSING_ERROR')) {
+      // Return a result that indicates the query was skipped
+      return {
+        error: {
+          status: 'CUSTOM_ERROR',
+          error: 'Network unavailable - using cached data',
+        } as FetchBaseQueryError,
+      }
+    }
+  }
 
   if (result.error && result.error.status === 401) {
     // Try to refresh the token

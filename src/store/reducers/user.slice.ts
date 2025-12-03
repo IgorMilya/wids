@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { cookieUtils } from '../../utils/cookies'
 import { jwtUtils } from '../../utils/jwt'
+import { WhitelistedNetworkType, BlacklistedNetworkType } from 'types'
 
 interface StoredUser {
   id: string
@@ -11,6 +12,13 @@ interface UserState {
   user: StoredUser | null
   token: string | null
   refresh_token: string | null
+  isTempUser: boolean
+  deviceId: string | null
+  cachedNetworks: {
+    whitelist: WhitelistedNetworkType[]
+    blacklist: BlacklistedNetworkType[]
+    cachedAt: number | null
+  }
 }
 
 // Initialize state from cookies and JWT token
@@ -35,6 +43,13 @@ const getInitialState = (): UserState => {
     user,
     token,
     refresh_token,
+    isTempUser: false,
+    deviceId: null,
+    cachedNetworks: {
+      whitelist: [],
+      blacklist: [],
+      cachedAt: null,
+    },
   }
 }
 
@@ -67,6 +82,9 @@ const userSlice = createSlice({
         // Fallback to action payload if JWT decode fails (shouldn't happen)
         state.user = action.payload.user
       }
+      
+      // Clear temp user mode on login
+      state.isTempUser = false
     },
 
     setTokens: (
@@ -105,8 +123,24 @@ const userSlice = createSlice({
         // Don't store in localStorage, keep only in Redux state
       }
     },
+    setIsTempUser: (state, action: PayloadAction<boolean>) => {
+      state.isTempUser = action.payload
+    },
+    setDeviceId: (state, action: PayloadAction<string | null>) => {
+      state.deviceId = action.payload
+    },
+    setCachedNetworks: (
+      state,
+      action: PayloadAction<{
+        whitelist: WhitelistedNetworkType[]
+        blacklist: BlacklistedNetworkType[]
+        cachedAt: number | null
+      }>
+    ) => {
+      state.cachedNetworks = action.payload
+    },
   },
 })
 
-export const { loginUser, logoutUser, updateUsername, setTokens } = userSlice.actions
+export const { loginUser, logoutUser, updateUsername, setTokens, setIsTempUser, setDeviceId, setCachedNetworks } = userSlice.actions
 export default userSlice.reducer

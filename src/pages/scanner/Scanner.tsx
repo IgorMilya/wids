@@ -1,13 +1,22 @@
 import React, { FC, useEffect, useState } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import { load } from '@tauri-apps/plugin-store'
+import { useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import { Button, Chip, Table } from 'UI'
 import { useGetBlacklistQuery, useGetWhitelistQuery, useAddLogMutation, useGetProfileQuery } from 'store/api'
 import { WifiNetworkType } from 'types'
+import { RootState } from 'store'
+import { ROUTES } from 'routes/routes.utils'
+import { getDeviceId } from 'utils/deviceId'
+import { saveNetworkCache } from 'utils/cacheManager'
 import { TableScanner } from './table-scanner'
 import { tableTitle } from './scanner.utils'
 
 const Scanner: FC = () => {
+  const navigate = useNavigate()
+  const isTempUser = useSelector((state: RootState) => state.user.isTempUser)
+  const cachedNetworks = useSelector((state: RootState) => state.user.cachedNetworks)
   const [networks, setNetworks] = useState<WifiNetworkType[]>([])
   const [localWhitelist, setLocalWhitelist] = useState<string[]>([])
   const [localBlacklist, setLocalBlacklist] = useState<string[]>([])
@@ -15,12 +24,18 @@ const Scanner: FC = () => {
   const [activeNetwork, setActiveNetwork] = useState<WifiNetworkType | null>(null)
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   const [isActive, setIsActive] = useState(false)
-  const { data: blacklist = [] } = useGetBlacklistQuery()
-  const { data: whitelist = [] } = useGetWhitelistQuery()
-  const { data: profile } = useGetProfileQuery()
+  
+  // Skip API queries for temp users, use cached networks instead
+  const { data: blacklist = [] } = useGetBlacklistQuery(undefined, { skip: isTempUser })
+  const { data: whitelist = [] } = useGetWhitelistQuery(undefined, { skip: isTempUser })
+  const { data: profile } = useGetProfileQuery(undefined, { skip: isTempUser })
   const [addLog] = useAddLogMutation()
   const [activeRiskFilter, setActiveRiskFilter] = useState<string | null>(null)
   const [isScanning, setIsScanning] = useState(false)
+  
+  // Use cached networks if temp user, otherwise use API data
+  const effectiveBlacklist = isTempUser ? cachedNetworks.blacklist : blacklist
+  const effectiveWhitelist = isTempUser ? cachedNetworks.whitelist : whitelist
 
 
   const RISK_CHIPS = ['Critical', 'High', 'Medium', 'Low', 'Whitelisted']
@@ -112,12 +127,19 @@ const Scanner: FC = () => {
   const scanWifi = async () => {
     try {
       setIsScanning(true)
-      addLog({ action: "SCAN_START", network_ssid: "-", details: "User started Wi-Fi scan" })
+      // Skip logging for guest users
+      if (!isTempUser) {
+        addLog({ action: "SCAN_START", network_ssid: "-", details: "User started Wi-Fi scan" })
+      }
       const result = await invoke<WifiNetworkType[]>('scan_wifi')
       setNetworks(result)
-      addLog({ action: "SCAN_SUCCESS", network_ssid: "-", details: `Found ${result.length} networks` })
+      if (!isTempUser) {
+        addLog({ action: "SCAN_SUCCESS", network_ssid: "-", details: `Found ${result.length} networks` })
+      }
     } catch (error) {
-      addLog({ action: "SCAN_FAILED", network_ssid: "-", details: String(error) })
+      if (!isTempUser) {
+        addLog({ action: "SCAN_FAILED", network_ssid: "-", details: String(error) })
+      }
       console.error('Wi-Fi scan failed', error)
     } finally {
       setIsScanning(false)
@@ -144,7 +166,7 @@ const Scanner: FC = () => {
 
   const syncWhitelistToStore = async () => {
     const store = await load('whitelist.json', { autoSave: false })
-    const bssidList = whitelist.map(wl => wl.bssid.toLowerCase())
+    const bssidList = effectiveWhitelist.map(wl => wl.bssid.toLowerCase())
     await store.set('whitelist_bssids', bssidList)
     await store.save()
     setLocalWhitelist(bssidList)
@@ -152,7 +174,7 @@ const Scanner: FC = () => {
 
   const syncBlacklistToStore = async () => {
     const store = await load('blacklist.json', { autoSave: false })
-    const bssidList = blacklist.map(bl => bl.bssid.toLowerCase())
+    const bssidList = effectiveBlacklist.map(bl => bl.bssid.toLowerCase())
     await store.set('blacklist_bssids', bssidList)
     await store.save()
     setLocalBlacklist(bssidList)
@@ -175,44 +197,77 @@ const Scanner: FC = () => {
     e.stopPropagation()
     try {
       await invoke('disconnect_wifi')
-      addLog({
-        action: "DISCONNECTED",
-        network_ssid: activeNetwork?.ssid || "-",
-        network_bssid: activeNetwork?.bssid,
-        details: "User disconnected from Wi-Fi"
-      })
+      if (!isTempUser) {
+        addLog({
+          action: "DISCONNECTED",
+          network_ssid: activeNetwork?.ssid || "-",
+          network_bssid: activeNetwork?.bssid,
+          details: "User disconnected from Wi-Fi"
+        })
+      }
       alert('Disconnected from Wi-Fi')
       setActiveNetwork(null)
     } catch (error) {
-      addLog({
-        action: "DISCONNECT_FAILED",
-        network_ssid: activeNetwork?.ssid || "-",
-        details: String(error)
-      })
+      if (!isTempUser) {
+        addLog({
+          action: "DISCONNECT_FAILED",
+          network_ssid: activeNetwork?.ssid || "-",
+          details: String(error)
+        })
+      }
       alert('Failed to disconnect')
     }
   }
 
   const onIsActive = () => setIsActive(!isActive)
 
+
   useEffect(() => {
-    loadWhitelistFromStore()
-    loadBlacklistFromStore()
+    if (isTempUser) {
+      // For temp users, use cached networks directly
+      setLocalWhitelist(effectiveWhitelist.map(wl => wl.bssid.toLowerCase()))
+      setLocalBlacklist(effectiveBlacklist.map(bl => bl.bssid.toLowerCase()))
+    } else {
+      loadWhitelistFromStore()
+      loadBlacklistFromStore()
+    }
     fetchActiveNetwork()
-  }, [])
+  }, [isTempUser, effectiveWhitelist, effectiveBlacklist])
 
 
   useEffect(() => {
-    // Always sync whitelist to store, even if empty, to ensure local state is updated
-    // This ensures deleted networks are removed from localWhitelist immediately
-    syncWhitelistToStore().catch(console.error)
-  }, [whitelist])
+    // Only sync if not temp user
+    if (!isTempUser) {
+      // Always sync whitelist to store, even if empty, to ensure local state is updated
+      // This ensures deleted networks are removed from localWhitelist immediately
+      syncWhitelistToStore().catch(console.error)
+    }
+  }, [effectiveWhitelist, isTempUser])
 
   useEffect(() => {
-    // Always sync blacklist to store, even if empty, to ensure local state is updated
-    // This ensures deleted networks are removed from localBlacklist immediately
-    syncBlacklistToStore().catch(console.error)
-  }, [blacklist])
+    // Only sync if not temp user
+    if (!isTempUser) {
+      // Always sync blacklist to store, even if empty, to ensure local state is updated
+      // This ensures deleted networks are removed from localBlacklist immediately
+      syncBlacklistToStore().catch(console.error)
+    }
+  }, [effectiveBlacklist, isTempUser])
+
+  // Cache networks when successfully loaded (for authenticated users)
+  useEffect(() => {
+    if (!isTempUser && (effectiveWhitelist.length > 0 || effectiveBlacklist.length > 0)) {
+      const cacheNetworks = async () => {
+        try {
+          const deviceId = await getDeviceId()
+          console.log('deviceId', deviceId);
+          await saveNetworkCache(deviceId, effectiveWhitelist, effectiveBlacklist)
+        } catch (error) {
+          console.error('Failed to cache networks:', error)
+        }
+      }
+      cacheNetworks()
+    }
+  }, [isTempUser, effectiveWhitelist, effectiveBlacklist])
 
 
   const filterOnActiveNetwork = () => {
@@ -326,6 +381,13 @@ const Scanner: FC = () => {
 
   return (
     <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full max-w-full">
+      {isTempUser && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+          <p className="text-yellow-800 text-sm">
+            <strong>Guest Mode:</strong> You're using cached networks from previous logins. Some features are limited.
+          </p>
+        </div>
+      )}
       <h1 className="font-bold text-lg small-laptop:text-xl normal-laptop:text-[20px] mb-2 small-laptop:mb-[10px]">Wireless Intrusion Prevention System</h1>
       {!!activeNetwork?.ssid &&
         <div className="relative">

@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
+import { useSelector } from 'react-redux'
 import { Table } from 'UI'
 import { useGetWhitelistQuery } from 'store/api'
 import { tableWhitelistTitle } from './whitelist.utils'
 import { TableWhitelist } from './table-whitelist'
+import { RootState } from 'store'
 
 const Whitelist = () => {
+  const isTempUser = useSelector((state: RootState) => state.user.isTempUser)
   const [searchTerm, setSearchTerm] = useState('')
   const [searchDate, setSearchDate] = useState(''); // e.g. "2025-06-08"
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('') // debounced value
@@ -30,6 +33,20 @@ const Whitelist = () => {
   )
 
   const onToggle = (index: number) => setOpenIndex(openIndex === index ? null : index)
+
+  if (isTempUser) {
+    return (
+      <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full max-w-full">
+        <h1 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4">Whitelist</h1>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <p className="text-yellow-800 font-semibold mb-2">Offline Mode</p>
+          <p className="text-yellow-700 text-sm">
+            Please login to view your whitelist. You can use cached networks in Scanner when offline.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full max-w-full">

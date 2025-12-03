@@ -1,10 +1,13 @@
+import { useSelector } from 'react-redux'
 import { useGetBlacklistQuery } from 'store/api'
 import { Table } from 'UI'
 import { tableBlacklistTitle } from './blacklist.utils'
 import { TableBlacklist } from './table-blacklist'
 import { useEffect, useState } from 'react'
+import { RootState } from 'store'
 
 const Blacklist = () => {
+  const isTempUser = useSelector((state: RootState) => state.user.isTempUser)
   const [searchTerm, setSearchTerm] = useState('')
   const [searchDate, setSearchDate] = useState(''); // e.g. "2025-06-08"
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('') // debounced value
@@ -29,6 +32,21 @@ const Blacklist = () => {
       : undefined
   )
   const onToggle = (index: number) => setOpenIndex(openIndex === index ? null : index)
+  
+  if (isTempUser) {
+    return (
+      <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full max-w-full">
+        <h1 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4">Blacklist</h1>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <p className="text-yellow-800 font-semibold mb-2">Offline Mode</p>
+          <p className="text-yellow-700 text-sm">
+            Please login to view your blacklist. You can use cached networks in Scanner when offline.
+          </p>
+        </div>
+      </div>
+    )
+  }
+  
   return (
     <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full max-w-full">
       <h1 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4">Blacklist</h1>
