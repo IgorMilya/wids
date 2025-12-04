@@ -7,7 +7,6 @@ import { Button, Chip, Table } from 'UI'
 import { useGetBlacklistQuery, useGetWhitelistQuery, useAddLogMutation, useGetProfileQuery } from 'store/api'
 import { WifiNetworkType } from 'types'
 import { RootState } from 'store'
-import { ROUTES } from 'routes/routes.utils'
 import { getDeviceId } from 'utils/deviceId'
 import { saveNetworkCache } from 'utils/cacheManager'
 import { TableScanner } from './table-scanner'
@@ -137,10 +136,13 @@ const Scanner: FC = () => {
         addLog({ action: "SCAN_SUCCESS", network_ssid: "-", details: `Found ${result.length} networks` })
       }
     } catch (error) {
+      const errorMessage = typeof error === 'string' ? error : String(error)
       if (!isTempUser) {
-        addLog({ action: "SCAN_FAILED", network_ssid: "-", details: String(error) })
+        addLog({ action: "SCAN_FAILED", network_ssid: "-", details: errorMessage })
       }
       console.error('Wi-Fi scan failed', error)
+      // Show user-friendly error message
+      alert(`Wi-Fi Scan Failed:\n\n${errorMessage}\n\nPlease ensure your WiFi adapter is enabled and try again.`)
     } finally {
       setIsScanning(false)
     }
@@ -428,24 +430,22 @@ const Scanner: FC = () => {
         />
       </div>
       <div className="flex gap-2 mb-3 small-laptop:mb-5 flex-wrap">
-        <button
+        <Button
           onClick={() => setActiveRiskFilter(null)}
-          className={`px-3 py-1 rounded-full text-sm border ${
-            activeRiskFilter === null ? 'bg-secondary text-white' : 'bg-white text-gray-800'
-          }`}
+          variant={activeRiskFilter === null ? 'secondary' : 'outline'}
+          className="!px-3 !py-1 !rounded-full !text-sm !border !gap-0 !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto"
         >
           All
-        </button>
+        </Button>
         {RISK_CHIPS.map(risk => (
-          <button
+          <Button
             key={risk}
             onClick={() => setActiveRiskFilter(risk)}
-            className={`px-3 py-1 rounded-full text-sm border ${
-              activeRiskFilter === risk ? 'bg-secondary text-white' : 'bg-white text-gray-800'
-            }`}
+            variant={activeRiskFilter === risk ? 'secondary' : 'outline'}
+            className="!px-3 !py-1 !rounded-full !text-sm !border !gap-0 !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto"
           >
             {risk}
-          </button>
+          </Button>
         ))}
       </div>
       <div className="overflow-x-auto">
@@ -457,6 +457,7 @@ const Scanner: FC = () => {
               onToggle={() => onToggle(index)}
               onFetchActiveNetwork={fetchActiveNetwork}
               data={row}
+              isTempUser={isTempUser}
             />
           ))}
         </Table>

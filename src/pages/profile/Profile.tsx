@@ -465,17 +465,18 @@ const Profile: FC = () => {
       <div className="border-b border-gray-200 mb-4 small-laptop:mb-5 normal-laptop:mb-6 overflow-x-auto">
         <nav className="flex space-x-4 small-laptop:space-x-6 normal-laptop:space-x-8 min-w-max" aria-label="Tabs">
           {tabs.map((tab) => (
-            <button
+            <Button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`py-3 small-laptop:py-4 px-1 border-b-2 font-medium text-xs small-laptop:text-sm whitespace-nowrap transition-colors ${
+              variant="outline"
+              className={`!py-3 small-laptop:!py-4 !px-1 !border-b-2 !font-medium !text-xs small-laptop:!text-sm !whitespace-nowrap !transition-colors !bg-transparent !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto !justify-start !gap-0 ${
                 activeTab === tab.id
-                  ? 'border-[#3e3caa] text-[#3e3caa]'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? '!border-[#3e3caa] !text-[#3e3caa]'
+                  : '!border-transparent !text-gray-500 hover:!text-gray-700 hover:!border-gray-300'
               }`}
             >
               {tab.label}
-            </button>
+            </Button>
           ))}
         </nav>
       </div>

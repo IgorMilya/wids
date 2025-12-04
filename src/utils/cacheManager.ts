@@ -5,7 +5,7 @@ const NETWORK_CACHE_FILE = 'network_cache.json'
 const MAX_WHITELIST_CACHE = 50
 const MAX_BLACKLIST_CACHE = 50
 
-export interface NetworkCache {
+interface NetworkCache {
   deviceId: string
   whitelist: WhitelistedNetworkType[]
   blacklist: BlacklistedNetworkType[]

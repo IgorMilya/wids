@@ -11,7 +11,7 @@ import { loginUser } from 'store/reducers/user.slice'
 import { ROUTES } from 'routes/routes.utils'
 import { enableGuestMode } from 'utils/guestMode'
 import ReCAPTCHA from 'react-google-recaptcha'
-import { Input } from 'UI'
+import { Input, Button } from 'UI'
 import {
   registerInitialValues,
   registerValidationSchema,
@@ -180,29 +180,32 @@ export const Registration = () => {
                   </div>
                 )}
 
-                <button
+                <Button
                   type="submit"
                   disabled={isRegistering}
-                  className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition disabled:bg-gray-400"
+                  variant="secondary"
+                  className="!py-2 !rounded !transition"
                 >
                   {isRegistering ? 'Registering…' : 'Register'}
-                </button>
+                </Button>
 
-                <button
+                <Button
                   type="button"
                   onClick={() => navigate(ROUTES.LOGIN)}
-                  className="text-sm text-blue-600 hover:underline"
+                  variant="outline"
+                  className="!text-sm !text-secondary hover:!underline !bg-transparent !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto !justify-center"
                 >
                   Already have an account? Login
-                </button>
+                </Button>
                 <div className="mt-2 pt-2 border-t border-gray-200">
-                  <button
+                  <Button
                     type="button"
                     onClick={handleGuestLogin}
-                    className="text-sm text-gray-600 hover:text-gray-800 font-medium"
+                    variant="outline"
+                    className="!text-sm !text-gray-600 hover:!text-gray-800 !font-medium !bg-transparent !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto !justify-center"
                   >
                     Login as Guest
-                  </button>
+                  </Button>
                   <p className="text-xs text-gray-500 mt-1">
                     Use offline mode with cached networks
                   </p>
@@ -240,32 +243,35 @@ export const Registration = () => {
                   </div>
                 )}
 
-                <button
+                <Button
                   type="submit"
                   disabled={isVerifying}
-                  className="bg-green-600 text-white py-2 rounded hover:bg-green-700 transition disabled:bg-gray-400"
+                  variant="primary"
+                  className="!bg-green-600 !text-white !py-2 !rounded hover:!bg-green-700 !transition"
                 >
                   {isVerifying ? 'Verifying…' : 'Verify & Continue'}
-                </button>
+                </Button>
               </Form>
             </Formik>
 
-            <button
+            <Button
               type="button"
               onClick={handleResendCode}
               disabled={isResending}
-              className="mt-4 w-full text-sm text-blue-600 hover:underline disabled:text-gray-400"
+              variant="outline"
+              className="!mt-4 !w-full !text-sm !text-secondary hover:!underline !bg-transparent !p-0 !normal-laptop:w-full !large-laptop:w-full !wide-screen:w-full !small-laptop:w-full !justify-center"
             >
               {isResending ? 'Sending…' : 'Resend verification code'}
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
               onClick={() => navigate(ROUTES.LOGIN)}
-              className="mt-2 w-full text-sm text-blue-600 hover:underline"
+              variant="outline"
+              className="!mt-2 !w-full !text-sm !text-secondary hover:!underline !bg-transparent !p-0 !normal-laptop:w-full !large-laptop:w-full !wide-screen:w-full !small-laptop:w-full !justify-center"
             >
               Back to login
-            </button>
+            </Button>
           </>
         )}
       </div>

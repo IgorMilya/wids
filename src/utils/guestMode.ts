@@ -10,7 +10,9 @@ import { loadNetworkCache } from './cacheManager'
 export const enableGuestMode = async (): Promise<void> => {
   try {
     const deviceId = await getDeviceId()
+    console.log('deviceId', deviceId);
     const cache = await loadNetworkCache(deviceId)
+    console.log('cache', cache);
 
     if (cache) {
       store.dispatch(setDeviceId(deviceId))

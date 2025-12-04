@@ -8,6 +8,7 @@ import { useLocation, NavLink, useNavigate } from 'react-router-dom'
 import { ROUTES } from 'routes/routes.utils'
 import { useLogoutMutation } from 'store/api'
 import { cookieUtils } from 'utils/cookies'
+import { Button } from 'UI'
 
 interface NavbarProps {
   data: LinkItemType[]
@@ -57,50 +58,48 @@ const Navbar: FC<NavbarProps> = ({ data }) => {
       {isTempUser ? (
         <>
           {/* Show Login and Register buttons for guest users */}
-          <button
+          <Button
             onClick={() => navigate(ROUTES.LOGIN)}
-            className="block w-full text-left text-xs small-laptop:text-sm normal-laptop:text-[14px] p-3 small-laptop:p-[12px] normal-laptop:p-[15px] font-medium transition border-t border-gray-700 text-gray-300 hover:bg-[rgba(255,255,255,0.1)] hover:text-white"
+            variant="outline"
+            className="!block !w-full !text-left !text-xs small-laptop:!text-sm normal-laptop:!text-[14px] !p-3 small-laptop:!p-[12px] normal-laptop:!p-[15px] !font-medium !transition !border-t !border-gray-700 !text-gray-300 hover:!bg-[rgba(255,255,255,0.1)] hover:!text-white !bg-transparent !justify-start !gap-2 !normal-laptop:w-full !large-laptop:w-full !wide-screen:w-full !small-laptop:w-full"
           >
-            <div className="flex items-center gap-2">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                />
-              </svg>
-              <span>Login</span>
-            </div>
-          </button>
-          <button
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+              />
+            </svg>
+            <span>Login</span>
+          </Button>
+          <Button
             onClick={() => navigate(ROUTES.REGISTRATION)}
-            className="block w-full text-left text-xs small-laptop:text-sm normal-laptop:text-[14px] p-3 small-laptop:p-[12px] normal-laptop:p-[15px] font-medium transition border-t border-gray-700 text-gray-300 hover:bg-[rgba(255,255,255,0.1)] hover:text-white"
+            variant="outline"
+            className="!block !w-full !text-left !text-xs small-laptop:!text-sm normal-laptop:!text-[14px] !p-3 small-laptop:!p-[12px] normal-laptop:!p-[15px] !font-medium !transition !border-t !border-gray-700 !text-gray-300 hover:!bg-[rgba(255,255,255,0.1)] hover:!text-white !bg-transparent !justify-start !gap-2 !normal-laptop:w-full !large-laptop:w-full !wide-screen:w-full !small-laptop:w-full"
           >
-            <div className="flex items-center gap-2">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                />
-              </svg>
-              <span>Register</span>
-            </div>
-          </button>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+              />
+            </svg>
+            <span>Register</span>
+          </Button>
         </>
       ) : (
         <>
@@ -131,28 +130,27 @@ const Navbar: FC<NavbarProps> = ({ data }) => {
               <span className="truncate">{user?.username || 'Profile'}</span>
             </div>
           </NavLink>
-          <button
+          <Button
             onClick={handleLogout}
-            className="block w-full text-left text-xs small-laptop:text-sm normal-laptop:text-[14px] p-3 small-laptop:p-[12px] normal-laptop:p-[15px] font-medium transition border-t border-gray-700 text-gray-300 hover:bg-[rgba(255,255,255,0.1)] hover:text-white"
+            variant="outline"
+            className="!block !w-full !text-left !text-xs small-laptop:!text-sm normal-laptop:!text-[14px] !p-3 small-laptop:!p-[12px] normal-laptop:!p-[15px] !font-medium !transition !border-t !border-gray-700 !text-gray-300 hover:!bg-[rgba(255,255,255,0.1)] hover:!text-white !bg-transparent !justify-start !gap-2 !normal-laptop:w-full !large-laptop:w-full !wide-screen:w-full !small-laptop:w-full"
           >
-            <div className="flex items-center gap-2">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                />
-              </svg>
-              <span>Logout</span>
-            </div>
-          </button>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+            <span>Logout</span>
+          </Button>
         </>
       )}
     </nav>

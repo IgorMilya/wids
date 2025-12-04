@@ -5,6 +5,7 @@ import {
   useResetPasswordConfirmMutation,
 } from 'store/api'
 import { ROUTES } from 'routes/routes.utils'
+import { Button } from 'UI'
 
 export const ResetPassword = () => {
   const navigate = useNavigate()
@@ -62,20 +63,21 @@ export const ResetPassword = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-blue-300"
+                  className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-secondary"
                 />
               </div>
 
               {error && <div className="text-red-600 text-sm text-center">{error}</div>}
               {info && <div className="text-green-600 text-sm text-center">{info}</div>}
 
-              <button
+              <Button
                 type="submit"
                 disabled={requesting}
-                className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition disabled:bg-gray-400"
+                variant="secondary"
+                className="!py-2 !rounded !transition"
               >
                 {requesting ? 'Sending...' : 'Send reset code'}
-              </button>
+              </Button>
             </form>
           </>
         ) : (
@@ -89,7 +91,7 @@ export const ResetPassword = () => {
                   required
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
-                  className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-blue-300"
+                  className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-secondary"
                 />
               </div>
 
@@ -100,31 +102,33 @@ export const ResetPassword = () => {
                   required
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-blue-300"
+                  className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-secondary"
                 />
               </div>
 
               {error && <div className="text-red-600 text-sm text-center">{error}</div>}
               {info && <div className="text-green-600 text-sm text-center">{info}</div>}
 
-              <button
+              <Button
                 type="submit"
                 disabled={confirming}
-                className="bg-green-600 text-white py-2 rounded hover:bg-green-700 transition disabled:bg-gray-400"
+                variant="primary"
+                className="!bg-green-600 !text-white !py-2 !rounded hover:!bg-green-700 !transition"
               >
                 {confirming ? 'Updating...' : 'Update password'}
-              </button>
+              </Button>
             </form>
           </>
         )}
 
-        <button
+        <Button
           type="button"
           onClick={() => navigate(ROUTES.LOGIN)}
-          className="mt-4 w-full text-center text-sm text-blue-600 hover:underline"
+          variant="outline"
+          className="!mt-4 !w-full !text-center !text-sm !text-secondary hover:!underline !bg-transparent !p-0 !normal-laptop:w-full !large-laptop:w-full !wide-screen:w-full !small-laptop:w-full !justify-center"
         >
           Back to Login
-        </button>
+        </Button>
       </div>
     </div>
   )

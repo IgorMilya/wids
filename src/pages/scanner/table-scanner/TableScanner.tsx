@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import { FC, useState } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import { useAddBlacklistMutation, useAddWhitelistMutation, useAddLogMutation } from 'store/api'
 import { Button, Chip, Modal } from 'UI'
@@ -11,9 +11,10 @@ interface TableScannerProps {
   isShowNetwork: boolean,
   onToggle: () => void
   onFetchActiveNetwork: () => void
+  isTempUser?: boolean
 }
 
-const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, onFetchActiveNetwork }) => {
+const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, onFetchActiveNetwork, isTempUser = false }) => {
   const { bssid, risk, signal, ssid, encryption, authentication, is_evil_twin } = data
   const { isOpen, handleToggleIsOpenModal } = useIsModal()
   const [addBlacklist, { isLoading: isAdding }] = useAddBlacklistMutation()
@@ -161,11 +162,11 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
               </div>
               <div className="w-[150px]">
                 <Button onClick={() => handleBlacklist(ssid, bssid)} variant="red"
-                        disabled={isAdding || risk === 'WL'}>Blacklist</Button>
+                        disabled={isAdding || risk === 'WL' || isTempUser}>Blacklist</Button>
               </div>
               <div className="w-[150px]">
                 <Button onClick={() => handleWhitelist(ssid, bssid)} variant="primary"
-                        disabled={isAddingWhitelist || risk === 'WL'}>Whitelist</Button>
+                        disabled={isAddingWhitelist || risk === 'WL' || isTempUser}>Whitelist</Button>
               </div>
             </div>
 

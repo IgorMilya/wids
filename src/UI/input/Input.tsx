@@ -24,7 +24,7 @@ const Input: FC<InputProps> = ({ type, placeholder, name, labelText, disabled })
       )}
       <input
         placeholder={placeholder}
-        className={`border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-blue-300 ${errorStyles} text-gray-900 bg-white w-full`}
+        className={`border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-secondary ${errorStyles} text-gray-900 bg-white w-full`}
         type={type || 'text'}
         {...field}
         disabled={disabled}

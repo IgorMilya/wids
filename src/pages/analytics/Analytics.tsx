@@ -1,5 +1,6 @@
 import React from 'react'
 import { useGetAnalyticsQuery } from 'store/api'
+import { Button } from 'UI'
 import {
   Chart as ChartJS,
   ArcElement,
@@ -499,56 +500,61 @@ const Analytics = () => {
           <div className="flex flex-col small-laptop:flex-row justify-between items-start small-laptop:items-center mb-3 small-laptop:mb-4 gap-2">
             <h2 className="text-lg small-laptop:text-xl font-bold text-gray-800">Threat Type Distribution</h2>
             <div className="flex flex-wrap gap-1 small-laptop:gap-2">
-              <button
+              <Button
                 onClick={() => setThreatDateFilter('day')}
-                className={`px-2 small-laptop:px-3 py-1 rounded text-xs font-medium ${
+                variant={threatDateFilter === 'day' ? 'primary' : 'outline'}
+                className={`!px-2 small-laptop:!px-3 !py-1 !rounded !text-xs !font-medium !gap-0 !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto ${
                   threatDateFilter === 'day'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? '!bg-blue-500 !text-white'
+                    : '!bg-gray-100 !text-gray-700 hover:!bg-gray-200'
                 }`}
               >
                 Day
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setThreatDateFilter('week')}
-                className={`px-2 small-laptop:px-3 py-1 rounded text-xs font-medium ${
+                variant={threatDateFilter === 'week' ? 'primary' : 'outline'}
+                className={`!px-2 small-laptop:!px-3 !py-1 !rounded !text-xs !font-medium !gap-0 !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto ${
                   threatDateFilter === 'week'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? '!bg-blue-500 !text-white'
+                    : '!bg-gray-100 !text-gray-700 hover:!bg-gray-200'
                 }`}
               >
                 Week
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setThreatDateFilter('month')}
-                className={`px-2 small-laptop:px-3 py-1 rounded text-xs font-medium ${
+                variant={threatDateFilter === 'month' ? 'primary' : 'outline'}
+                className={`!px-2 small-laptop:!px-3 !py-1 !rounded !text-xs !font-medium !gap-0 !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto ${
                   threatDateFilter === 'month'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? '!bg-blue-500 !text-white'
+                    : '!bg-gray-100 !text-gray-700 hover:!bg-gray-200'
                 }`}
               >
                 Month
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setThreatDateFilter('year')}
-                className={`px-2 small-laptop:px-3 py-1 rounded text-xs font-medium ${
+                variant={threatDateFilter === 'year' ? 'primary' : 'outline'}
+                className={`!px-2 small-laptop:!px-3 !py-1 !rounded !text-xs !font-medium !gap-0 !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto ${
                   threatDateFilter === 'year'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? '!bg-blue-500 !text-white'
+                    : '!bg-gray-100 !text-gray-700 hover:!bg-gray-200'
                 }`}
               >
                 Year
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setThreatDateFilter('all')}
-                className={`px-2 small-laptop:px-3 py-1 rounded text-xs font-medium ${
+                variant={threatDateFilter === 'all' ? 'primary' : 'outline'}
+                className={`!px-2 small-laptop:!px-3 !py-1 !rounded !text-xs !font-medium !gap-0 !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto ${
                   threatDateFilter === 'all'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? '!bg-blue-500 !text-white'
+                    : '!bg-gray-100 !text-gray-700 hover:!bg-gray-200'
                 }`}
               >
                 All
-              </button>
+              </Button>
             </div>
           </div>
           {threatTypeData.length > 0 ? (

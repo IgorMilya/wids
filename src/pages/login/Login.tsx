@@ -6,7 +6,7 @@ import { useLoginMutation } from 'store/api'
 import { useDispatch } from 'react-redux'
 import { loginUser } from 'store/reducers/user.slice'
 import { ROUTES } from 'routes/routes.utils'
-import { Input } from 'UI'
+import { Input, Button } from 'UI'
 import { initialValues, validationSchema } from './LoginForm.utils'
 import { getDeviceId } from 'utils/deviceId'
 import { saveNetworkCache } from 'utils/cacheManager'
@@ -143,39 +143,43 @@ export const Login = () => {
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
               disabled={isLoading}
-              className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition disabled:bg-gray-400"
+              variant="secondary"
+              className="!py-2 !rounded !transition"
             >
               {isLoading ? 'Logging in...' : 'Login'}
-            </button>
+            </Button>
           </Form>
         </Formik>
 
         <div className="mt-4 flex flex-col gap-2 text-sm text-center">
-          <button
+          <Button
             type="button"
             onClick={() => navigate(ROUTES.RESET_PASSWORD)}
-            className="text-blue-600 hover:underline"
+            variant="outline"
+            className="!text-secondary hover:!underline !bg-transparent !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto !justify-center"
           >
             Forgot password?
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={() => navigate(ROUTES.REGISTRATION)}
-            className="text-blue-600 hover:underline"
+            variant="outline"
+            className="!text-secondary hover:!underline !bg-transparent !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto !justify-center"
           >
             Need an account? Register
-          </button>
+          </Button>
           <div className="mt-2 pt-2 border-t border-gray-200">
-            <button
+            <Button
               type="button"
               onClick={handleGuestLogin}
-              className="text-gray-600 hover:text-gray-800 font-medium"
+              variant="outline"
+              className="!text-gray-600 hover:!text-gray-800 !font-medium !bg-transparent !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto !justify-center"
             >
               Login as Guest
-            </button>
+            </Button>
             <p className="text-xs text-gray-500 mt-1">
               Use offline mode with cached networks
             </p>
