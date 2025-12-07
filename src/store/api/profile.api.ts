@@ -36,7 +36,7 @@ export const profile = api.injectEndpoints({
       invalidatesTags: ['Profile', 'Analytics'],
     }),
     changeUsername: builder.mutation<
-      { status: string; username: string },
+      { status: string; username: string; token: string; refresh_token: string },
       { username: string }
     >({
       query: (data) => ({

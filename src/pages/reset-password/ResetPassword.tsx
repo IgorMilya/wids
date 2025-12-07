@@ -1,11 +1,37 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Formik, Form, FormikHelpers } from 'formik'
+import { object, string, ref } from 'yup'
 import {
   useResetPasswordRequestMutation,
   useResetPasswordConfirmMutation,
 } from 'store/api'
 import { ROUTES } from 'routes/routes.utils'
 import { Button } from 'UI'
+import Input from 'UI/input/Input'
+import { validationUser } from 'utils/validation'
+
+const requestResetInitialValues = {
+  email: '',
+}
+
+const requestResetValidationSchema = object().shape({
+  email: validationUser.email(true),
+})
+
+const confirmResetInitialValues = {
+  code: '',
+  newPassword: '',
+  confirmPassword: '',
+}
+
+const confirmResetValidationSchema = object().shape({
+  code: string().required('Verification code is required'),
+  newPassword: validationUser.password(true),
+  confirmPassword: string()
+    .required('Please confirm your password')
+    .oneOf([ref('newPassword')], 'Passwords must match'),
+})
 
 export const ResetPassword = () => {
   const navigate = useNavigate()
@@ -14,38 +40,45 @@ export const ResetPassword = () => {
 
   const [step, setStep] = useState<'request' | 'confirm'>('request')
   const [email, setEmail] = useState('')
-  const [code, setCode] = useState('')
-  const [newPassword, setNewPassword] = useState('')
   const [info, setInfo] = useState('')
   const [error, setError] = useState('')
 
-  const handleRequest = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleRequest = async (
+    values: { email: string },
+    { setSubmitting }: FormikHelpers<{ email: string }>
+  ) => {
     setError('')
     setInfo('')
 
     try {
-      await requestReset({ email }).unwrap()
+      await requestReset({ email: values.email }).unwrap()
+      setEmail(values.email)
       setStep('confirm')
       setInfo('Reset code sent to your email.')
     } catch (err: any) {
       console.error(err)
       setError(err?.data?.error || 'Failed to send reset code.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
-  const handleConfirm = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleConfirm = async (
+    values: { code: string; newPassword: string; confirmPassword: string },
+    { setSubmitting }: FormikHelpers<{ code: string; newPassword: string; confirmPassword: string }>
+  ) => {
     setError('')
     setInfo('')
 
     try {
-      await confirmReset({ email, code, new_password: newPassword }).unwrap()
+      await confirmReset({ email, code: values.code, new_password: values.newPassword }).unwrap()
       setInfo('Password updated. Redirecting to login...')
       setTimeout(() => navigate(ROUTES.LOGIN), 1500)
     } catch (err: any) {
       console.error(err)
       setError(err?.data?.error || 'Failed to update password.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -55,69 +88,80 @@ export const ResetPassword = () => {
         {step === 'request' ? (
           <>
             <h2 className="text-2xl font-semibold mb-6 text-center">Reset Password</h2>
-            <form onSubmit={handleRequest} className="flex flex-col gap-4">
-              <div className="flex flex-col">
-                <label className="text-sm font-medium text-gray-700">Email</label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-secondary"
-                />
-              </div>
+            <Formik
+              initialValues={requestResetInitialValues}
+              validationSchema={requestResetValidationSchema}
+              onSubmit={handleRequest}
+            >
+              {({ isSubmitting }) => (
+                <Form className="flex flex-col gap-4">
+                  <Input
+                    name="email"
+                    labelText="Email"
+                    type="email"
+                    placeholder="Enter your email"
+                  />
 
-              {error && <div className="text-red-600 text-sm text-center">{error}</div>}
-              {info && <div className="text-green-600 text-sm text-center">{info}</div>}
+                  {error && <div className="text-red-600 text-sm text-center">{error}</div>}
+                  {info && <div className="text-green-600 text-sm text-center">{info}</div>}
 
-              <Button
-                type="submit"
-                disabled={requesting}
-                variant="secondary"
-                className="!py-2 !rounded !transition"
-              >
-                {requesting ? 'Sending...' : 'Send reset code'}
-              </Button>
-            </form>
+                  <Button
+                    type="submit"
+                    disabled={requesting || isSubmitting}
+                    variant="secondary"
+                    className="!py-2 !rounded !transition"
+                  >
+                    {requesting ? 'Sending...' : 'Send reset code'}
+                  </Button>
+                </Form>
+              )}
+            </Formik>
           </>
         ) : (
           <>
             <h2 className="text-2xl font-semibold mb-6 text-center">Enter Reset Code</h2>
-            <form onSubmit={handleConfirm} className="flex flex-col gap-4">
-              <div className="flex flex-col">
-                <label className="text-sm font-medium text-gray-700">Verification Code</label>
-                <input
-                  type="text"
-                  required
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-secondary"
-                />
-              </div>
+            <Formik
+              initialValues={confirmResetInitialValues}
+              validationSchema={confirmResetValidationSchema}
+              onSubmit={handleConfirm}
+            >
+              {({ isSubmitting }) => (
+                <Form className="flex flex-col gap-4">
+                  <Input
+                    name="code"
+                    labelText="Verification Code"
+                    type="text"
+                    placeholder="Enter verification code"
+                  />
 
-              <div className="flex flex-col">
-                <label className="text-sm font-medium text-gray-700">New Password</label>
-                <input
-                  type="password"
-                  required
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring focus:border-secondary"
-                />
-              </div>
+                  <Input
+                    name="newPassword"
+                    labelText="New Password"
+                    type="password"
+                    placeholder="Enter new password"
+                  />
 
-              {error && <div className="text-red-600 text-sm text-center">{error}</div>}
-              {info && <div className="text-green-600 text-sm text-center">{info}</div>}
+                  <Input
+                    name="confirmPassword"
+                    labelText="Confirm Password"
+                    type="password"
+                    placeholder="Confirm new password"
+                  />
 
-              <Button
-                type="submit"
-                disabled={confirming}
-                variant="primary"
-                className="!bg-green-600 !text-white !py-2 !rounded hover:!bg-green-700 !transition"
-              >
-                {confirming ? 'Updating...' : 'Update password'}
-              </Button>
-            </form>
+                  {error && <div className="text-red-600 text-sm text-center">{error}</div>}
+                  {info && <div className="text-green-600 text-sm text-center">{info}</div>}
+
+                  <Button
+                    type="submit"
+                    disabled={confirming || isSubmitting}
+                    variant="primary"
+                    className="!bg-green-600 !text-white !py-2 !rounded hover:!bg-green-700 !transition"
+                  >
+                    {confirming ? 'Updating...' : 'Update password'}
+                  </Button>
+                </Form>
+              )}
+            </Formik>
           </>
         )}
 

@@ -8,6 +8,15 @@
   "permissions": [
     "core:default",
     "opener:default",
-    "store:default"
+    "store:default",
+    "dialog:allow-save",
+    "dialog:allow-message",
+    "dialog:default",
+    "fs:allow-read-file",
+    "fs:allow-write-file",
+    "fs:allow-write-text-file",
+    "fs:allow-read-dir",
+    "fs:scope-download",
+    "fs:scope-document"
   ]
 }

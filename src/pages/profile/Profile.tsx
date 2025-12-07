@@ -1,5 +1,6 @@
 import { FC, useState, useEffect } from 'react'
-import { Button } from 'UI'
+import { Form, Formik, FormikHelpers } from 'formik'
+import { Button, Input } from 'UI'
 import {
   useGetProfileQuery,
   useUpdateProfileMutation,
@@ -9,7 +10,13 @@ import {
 } from 'store/api'
 import { useSelector, useDispatch } from 'react-redux'
 import type { RootState } from 'store/store'
-import { updateUsername } from 'store/reducers/user.slice'
+import { updateUsername, setTokens } from 'store/reducers/user.slice'
+import {
+  passwordChangeInitialValues,
+  passwordChangeValidationSchema,
+  usernameChangeInitialValues,
+  usernameChangeValidationSchema,
+} from './ProfileForm.utils'
 
 type TabType = 'network' | 'username' | 'password'
 
@@ -34,14 +41,16 @@ const Profile: FC = () => {
   const [minSignalStrength, setMinSignalStrength] = useState(50)
   const [maxRiskLevel, setMaxRiskLevel] = useState('M')
 
-  // Username/Password state
-  const [username, setUsername] = useState('')
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+  // Success state
   const [usernameChanged, setUsernameChanged] = useState(false)
   const [passwordChanged, setPasswordChanged] = useState(false)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
+  
+  // Track when user manually changes values (not from database load)
+  const [userChangedSpeed, setUserChangedSpeed] = useState(false)
+  const [userChangedConfidence, setUserChangedConfidence] = useState(false)
+  const [userChangedProfiling, setUserChangedProfiling] = useState(false)
+  const [userChangedProfileType, setUserChangedProfileType] = useState(false)
   
   // Track previous values for change detection
   const [previousProfile, setPreviousProfile] = useState<typeof profile | null>(null)
@@ -49,13 +58,16 @@ const Profile: FC = () => {
 
   useEffect(() => {
     if (profile) {
+      // Load stored values exactly as they are in the database (including 0, null, etc.)
       setProfilingPreference(profile.profiling_preference)
       setSpeedNetworkPreference(profile.speed_network_preference)
       setConfidenceLevel(profile.confidence_level)
       setProfileType(profile.profile_type)
       setPreferredAuth([...(profile.preferred_authentication || ['WPA3', 'WPA2'])]) // Create a copy to avoid read-only issues
-      setMinSignalStrength(profile.min_signal_strength || 50)
-      setMaxRiskLevel(profile.max_risk_level || 'M')
+      
+      // Use nullish coalescing to preserve 0 values (only default if null/undefined)
+      setMinSignalStrength(profile.min_signal_strength ?? 50)
+      setMaxRiskLevel(profile.max_risk_level ?? 'M')
       
       // Store previous profile for change detection (only on initial load)
       if (isInitialLoad) {
@@ -66,12 +78,16 @@ const Profile: FC = () => {
           preferred_authentication: [...(profile.preferred_authentication || [])],
         })
         setIsInitialLoad(false)
+        // Reset user change flags on initial load
+        setUserChangedSpeed(false)
+        setUserChangedConfidence(false)
+        setUserChangedProfiling(false)
+        setUserChangedProfileType(false)
       }
       // If not initial load and previousProfile exists, keep it (user is editing)
       // previousProfile will be updated after successful save
     }
     if (user?.username) {
-      setUsername(user.username)
       // Store previous username for change detection
       if (!previousUsername) {
         setPreviousUsername(user.username)
@@ -81,8 +97,9 @@ const Profile: FC = () => {
   }, [profile, user])
 
   // Auto-adjust min_signal_strength based on speed_network_preference
+  // Only when user manually changes speed preference, not on initial load
   useEffect(() => {
-    if (isInitialLoad || !profile) return // Only auto-adjust after initial load and user changes
+    if (isInitialLoad || !profile || !userChangedSpeed) return
     
     switch (speedNetworkPreference) {
       case 'high':
@@ -102,11 +119,12 @@ const Profile: FC = () => {
         break
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [speedNetworkPreference, isInitialLoad, profile])
+  }, [speedNetworkPreference, isInitialLoad, profile, userChangedSpeed])
 
   // Auto-adjust max_risk_level based on confidence_level
+  // Only when user manually changes confidence level, not on initial load
   useEffect(() => {
-    if (isInitialLoad || !profile) return // Only auto-adjust after initial load
+    if (isInitialLoad || !profile || !userChangedConfidence) return
     
     // Force immediate update based on current confidence level
     switch (confidenceLevel) {
@@ -128,12 +146,12 @@ const Profile: FC = () => {
         // Low confidence allows all risk levels - no auto-adjust needed
         break
     }
-  }, [confidenceLevel, maxRiskLevel, isInitialLoad, profile])
+  }, [confidenceLevel, maxRiskLevel, isInitialLoad, profile, userChangedConfidence])
 
   // Auto-adjust settings based on profiling_preference
-  // This should run after confidence level adjustments to ensure profiling preference takes priority
+  // Only when user manually changes profiling preference, not on initial load
   useEffect(() => {
-    if (isInitialLoad || !profile) return // Only auto-adjust after initial load
+    if (isInitialLoad || !profile || !userChangedProfiling) return
     
     switch (profilingPreference) {
       case 'speed':
@@ -144,7 +162,7 @@ const Profile: FC = () => {
           setMaxRiskLevel('H')
         }
         // Auto-set minimum signal strength to high if not already set high enough
-        // This will be handled by the speedNetworkPreference useEffect, but ensure it's at least 70
+        // Set this directly here since we're auto-changing speed
         if (minSignalStrength < 70) {
           setMinSignalStrength(70)
         }
@@ -174,18 +192,19 @@ const Profile: FC = () => {
           setMaxRiskLevel('H')
         }
         // Auto-set minimum signal strength to medium if needed
-        // This will be handled by the speedNetworkPreference useEffect, but ensure it's around 50
+        // Set this directly here since we're auto-changing speed
         if (minSignalStrength < 40 || minSignalStrength > 60) {
           setMinSignalStrength(50)
         }
         break
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profilingPreference, isInitialLoad, profile])
+  }, [profilingPreference, isInitialLoad, profile, userChangedProfiling])
 
   // Auto-adjust settings based on profile_type
+  // Only when user manually changes profile type, not on initial load
   useEffect(() => {
-    if (isInitialLoad || !profile) return // Only auto-adjust after initial load
+    if (isInitialLoad || !profile || !userChangedProfileType) return
     
     if (profileType === 'work') {
       // Work: stricter security - enforce Low/Medium risk only
@@ -209,7 +228,7 @@ const Profile: FC = () => {
         }
       }
     }
-  }, [profileType, maxRiskLevel, preferredAuth, isInitialLoad, profile])
+  }, [profileType, maxRiskLevel, preferredAuth, isInitialLoad, profile, userChangedProfileType])
 
   const handleAuthToggle = (auth: string) => {
     // In security mode or work mode: only allow WPA3 and WPA2, and prevent unchecking them
@@ -328,6 +347,12 @@ const Profile: FC = () => {
         max_risk_level: maxRiskLevel,
       })
       
+      // Reset user change flags after successful save
+      setUserChangedSpeed(false)
+      setUserChangedConfidence(false)
+      setUserChangedProfiling(false)
+      setUserChangedProfileType(false)
+      
       // Log summary if multiple fields changed
       if (changedFields.length > 1) {
         addLog({
@@ -355,14 +380,12 @@ const Profile: FC = () => {
     }
   }
 
-  const handleChangeUsername = async () => {
-    if (!username.trim()) {
-      alert('Username cannot be empty')
-      return
-    }
-    
+  const handleChangeUsername = async (
+    values: { username: string },
+    { resetForm }: FormikHelpers<{ username: string }>
+  ) => {
     const oldUsername = previousUsername || user?.username || ''
-    const newUsername = username.trim()
+    const newUsername = values.username.trim()
     
     if (oldUsername === newUsername) {
       alert('Username is unchanged')
@@ -371,6 +394,16 @@ const Profile: FC = () => {
     
     try {
       const response = await changeUsername({ username: newUsername }).unwrap()
+      
+      // Update tokens with new JWT that contains updated username
+      if (response.token && response.refresh_token) {
+        dispatch(setTokens({
+          token: response.token,
+          refresh_token: response.refresh_token
+        }))
+      }
+      
+      // Update username in Redux store
       dispatch(updateUsername(response.username))
       setPreviousUsername(newUsername)
       setUsernameChanged(true)
@@ -384,6 +417,7 @@ const Profile: FC = () => {
       }).catch(console.error)
       
       alert('Username updated successfully!')
+      resetForm()
     } catch (error: any) {
       addLog({
         network_ssid: '-',
@@ -394,44 +428,27 @@ const Profile: FC = () => {
     }
   }
 
-  const handleChangePassword = async () => {
-    if (newPassword !== confirmPassword) {
-      alert('New passwords do not match')
-      addLog({
-        network_ssid: '-',
-        action: 'PASSWORD_CHANGE_FAILED',
-        details: 'Password change failed: New passwords do not match',
-      }).catch(console.error)
-      return
-    }
-    if (newPassword.length < 6) {
-      alert('Password must be at least 6 characters')
-      addLog({
-        network_ssid: '-',
-        action: 'PASSWORD_CHANGE_FAILED',
-        details: `Password change failed: Password too short (${newPassword.length} characters, minimum 6 required)`,
-      }).catch(console.error)
-      return
-    }
+  const handleChangePassword = async (
+    values: { currentPassword: string; newPassword: string; confirmPassword: string },
+    { resetForm }: FormikHelpers<{ currentPassword: string; newPassword: string; confirmPassword: string }>
+  ) => {
     try {
       await changePassword({
-        current_password: currentPassword,
-        new_password: newPassword,
+        current_password: values.currentPassword,
+        new_password: values.newPassword,
       }).unwrap()
       
       // Log successful password change (don't log the actual password)
       addLog({
         network_ssid: '-',
         action: 'PASSWORD_CHANGED',
-        details: `Password changed successfully (length: ${newPassword.length} characters)`,
+        details: `Password changed successfully (length: ${values.newPassword.length} characters)`,
       }).catch(console.error)
       
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirmPassword('')
       setPasswordChanged(true)
       setTimeout(() => setPasswordChanged(false), 3000)
       alert('Password updated successfully!')
+      resetForm()
     } catch (error: any) {
       addLog({
         network_ssid: '-',
@@ -492,7 +509,10 @@ const Profile: FC = () => {
           <label className="block text-sm font-medium mb-2">Profiling Preference</label>
           <select
             value={profilingPreference}
-            onChange={(e) => setProfilingPreference(e.target.value)}
+            onChange={(e) => {
+              setProfilingPreference(e.target.value)
+              setUserChangedProfiling(true)
+            }}
             className="w-full p-2 border rounded-md"
           >
             <option value="speed">Speed</option>
@@ -505,7 +525,10 @@ const Profile: FC = () => {
           <label className="block text-sm font-medium mb-2">Speed Network Preference</label>
           <select
             value={speedNetworkPreference}
-            onChange={(e) => setSpeedNetworkPreference(e.target.value)}
+            onChange={(e) => {
+              setSpeedNetworkPreference(e.target.value)
+              setUserChangedSpeed(true)
+            }}
             className="w-full p-2 border rounded-md"
           >
             <option value="high">High</option>
@@ -518,7 +541,10 @@ const Profile: FC = () => {
           <label className="block text-sm font-medium mb-2">Confidence Level</label>
           <select
             value={confidenceLevel}
-            onChange={(e) => setConfidenceLevel(e.target.value)}
+            onChange={(e) => {
+              setConfidenceLevel(e.target.value)
+              setUserChangedConfidence(true)
+            }}
             className="w-full p-2 border rounded-md"
           >
             <option value="high">High</option>
@@ -531,7 +557,10 @@ const Profile: FC = () => {
           <label className="block text-sm font-medium mb-2">Profile Type</label>
           <select
             value={profileType}
-            onChange={(e) => setProfileType(e.target.value)}
+            onChange={(e) => {
+              setProfileType(e.target.value)
+              setUserChangedProfileType(true)
+            }}
             className="w-full p-2 border rounded-md"
           >
             <option value="personal">Personal</option>
@@ -618,68 +647,76 @@ const Profile: FC = () => {
         {/* Change Username Tab */}
         {activeTab === 'username' && (
           <div>
-            <h2 className="text-lg font-semibold mb-4">Change Username</h2>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Username</label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter new username"
-                className="w-full p-2 border rounded-md"
-              />
-            </div>
-            <Button
-              variant="secondary"
-              onClick={handleChangeUsername}
-              disabled={!username.trim() || username === user?.username}
+            <h2 className="text-base small-laptop:text-lg font-semibold mb-3 small-laptop:mb-4">Change Username</h2>
+            <Formik
+              initialValues={{
+                ...usernameChangeInitialValues,
+                username: user?.username || '',
+              }}
+              validationSchema={usernameChangeValidationSchema}
+              onSubmit={handleChangeUsername}
+              enableReinitialize
             >
-              {usernameChanged ? 'Username Updated!' : 'Update Username'}
-            </Button>
+              {({ values, isSubmitting }) => (
+                <Form className="flex flex-col gap-4">
+                  <Input
+                    name="username"
+                    labelText="Username"
+                    type="text"
+                    placeholder="Enter new username"
+                  />
+                  <Button
+                    type="submit"
+                    variant="secondary"
+                    disabled={isSubmitting || !values.username.trim() || values.username === user?.username}
+                  >
+                    {isSubmitting ? 'Updating...' : usernameChanged ? 'Username Updated!' : 'Update Username'}
+                  </Button>
+                </Form>
+              )}
+            </Formik>
           </div>
         )}
 
         {/* Change Password Tab */}
         {activeTab === 'password' && (
           <div>
-            <h2 className="text-lg font-semibold mb-4">Change Password</h2>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Current Password</label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Enter current password"
-                className="w-full p-2 border rounded-md"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">New Password</label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password"
-                className="w-full p-2 border rounded-md"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Confirm New Password</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
-                className="w-full p-2 border rounded-md"
-              />
-            </div>
-            <Button
-              variant="secondary"
-              onClick={handleChangePassword}
-              disabled={!currentPassword || !newPassword || !confirmPassword}
+            <h2 className="text-base small-laptop:text-lg font-semibold mb-3 small-laptop:mb-4">Change Password</h2>
+            <Formik
+              initialValues={passwordChangeInitialValues}
+              validationSchema={passwordChangeValidationSchema}
+              onSubmit={handleChangePassword}
             >
-              {passwordChanged ? 'Password Updated!' : 'Update Password'}
-            </Button>
+              {({ isSubmitting }) => (
+                <Form className="flex flex-col gap-4">
+                  <Input
+                    name="currentPassword"
+                    labelText="Current Password"
+                    type="password"
+                    placeholder="Enter current password"
+                  />
+                  <Input
+                    name="newPassword"
+                    labelText="New Password"
+                    type="password"
+                    placeholder="Enter new password"
+                  />
+                  <Input
+                    name="confirmPassword"
+                    labelText="Confirm New Password"
+                    type="password"
+                    placeholder="Confirm new password"
+                  />
+                  <Button
+                    type="submit"
+                    variant="secondary"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Updating...' : passwordChanged ? 'Password Updated!' : 'Update Password'}
+                  </Button>
+                </Form>
+              )}
+            </Formik>
           </div>
         )}
       </div>

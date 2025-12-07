@@ -38,7 +38,7 @@ export const logsApi = api.injectEndpoints({
     }),
 
     exportLogs: builder.query<
-      { total: number; logs: LogEntryType[] },
+      LogEntryType[],
       {
         ssid?: string
         action?: string

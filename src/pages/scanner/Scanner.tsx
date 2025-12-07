@@ -224,6 +224,13 @@ const Scanner: FC = () => {
   const onIsActive = () => setIsActive(!isActive)
 
 
+  // Fetch active network only once on mount
+  useEffect(() => {
+    fetchActiveNetwork()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Load whitelist/blacklist when they change
   useEffect(() => {
     if (isTempUser) {
       // For temp users, use cached networks directly
@@ -233,7 +240,6 @@ const Scanner: FC = () => {
       loadWhitelistFromStore()
       loadBlacklistFromStore()
     }
-    fetchActiveNetwork()
   }, [isTempUser, effectiveWhitelist, effectiveBlacklist])
 
 
