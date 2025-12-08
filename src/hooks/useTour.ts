@@ -38,7 +38,12 @@ export const useTour = () => {
   // Initialize tour
   const initializeTour = () => {
     if (tourRef.current) {
-      tourRef.current.destroy()
+      // Shepherd.js Tour doesn't have destroy(), use cancel() or complete() instead
+      try {
+        (tourRef.current as any).cancel()
+      } catch (e) {
+        // Ignore if cancel doesn't work
+      }
     }
 
     const tour = new Shepherd.Tour({
@@ -49,16 +54,6 @@ export const useTour = () => {
         },
         scrollTo: { behavior: 'smooth', block: 'center' },
         classes: 'shepherd-theme-custom',
-        popperOptions: {
-          modifiers: [
-            {
-              name: 'offset',
-              options: {
-                offset: [0, 12],
-              },
-            },
-          ],
-        },
       },
     })
 
@@ -80,7 +75,7 @@ export const useTour = () => {
   const stopTour = () => {
     if (tourRef.current) {
       tourRef.current.complete()
-      tourRef.current.destroy()
+      // Shepherd.js Tour doesn't have destroy(), just set to null
       tourRef.current = null
     }
     setIsTourActive(false)
@@ -90,7 +85,12 @@ export const useTour = () => {
   useEffect(() => {
     return () => {
       if (tourRef.current) {
-        tourRef.current.destroy()
+        try {
+          (tourRef.current as any).cancel()
+        } catch (e) {
+          // Ignore if cancel doesn't work
+        }
+        tourRef.current = null
       }
     }
   }, [])

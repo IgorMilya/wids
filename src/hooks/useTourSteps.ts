@@ -44,7 +44,7 @@ export const createTourSteps = (
         action: () => {
           // Auto-trigger scan when clicking Next
           // The Button component renders a button element, so data-tour should be on the button
-          const scanButton = document.querySelector('button[data-tour="scan-button"]') as HTMLElement
+          const scanButton = document.querySelector('button[data-tour="scan-button"]') as HTMLButtonElement
           
           if (scanButton && !scanButton.disabled && !scanButton.textContent?.includes('Scanning')) {
             // Trigger click event directly
