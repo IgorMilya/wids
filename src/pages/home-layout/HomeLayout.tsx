@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom'
 // import { listen } from '@tauri-apps/api/event'
 // import { invoke } from '@tauri-apps/api/core'
 import { Navbar } from 'UI'
+import { Tour } from 'components'
 // Real-time monitoring feature - COMMENTED OUT (will be re-enabled in future)
 // import { NotificationCenter } from 'components'
 // import { useNotifications } from 'hooks'
@@ -92,6 +93,7 @@ const HomeLayout = ()=> {
 
   return (
     <div className="bg-primary h-screen overflow-hidden">
+      <Tour />
       <div className="flex h-full">
         <Navbar data={navLink} />
         <div className="flex-1 overflow-auto">

@@ -224,9 +224,9 @@ const Logs = () => {
   };
   return (
     <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full max-w-full">
-      <h1 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4">User Logs</h1>
+      <h1 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4" data-tour="logs-title">User Logs</h1>
 
-      <div className="mb-3 small-laptop:mb-4 flex flex-col small-laptop:flex-row gap-2 flex-wrap">
+      <div className="mb-3 small-laptop:mb-4 flex flex-col small-laptop:flex-row gap-2 flex-wrap" data-tour="logs-search">
         <input
           type="text"
           placeholder="SSID"

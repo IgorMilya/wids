@@ -435,7 +435,7 @@ const Analytics = () => {
       <h1 className="text-xl small-laptop:text-2xl normal-laptop:text-3xl font-bold mb-4 small-laptop:mb-5 normal-laptop:mb-6 text-gray-800">Analytics Dashboard</h1>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 small-laptop:grid-cols-2 normal-laptop:grid-cols-2 large-laptop:grid-cols-4 gap-3 small-laptop:gap-4 mb-6 small-laptop:mb-8">
+      <div className="grid grid-cols-1 small-laptop:grid-cols-2 normal-laptop:grid-cols-2 large-laptop:grid-cols-4 gap-3 small-laptop:gap-4 mb-6 small-laptop:mb-8" data-tour="analytics-summary">
         <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md border-l-4 border-blue-500">
           <h3 className="text-gray-600 text-xs small-laptop:text-sm font-medium mb-1 small-laptop:mb-2">Total Scans</h3>
           <p className="text-2xl small-laptop:text-3xl font-bold text-gray-800">{connection_stats.total_scan_attempts}</p>
@@ -468,7 +468,7 @@ const Analytics = () => {
       {/* Security Metrics */}
       <div className="grid grid-cols-1 normal-laptop:grid-cols-2 gap-4 small-laptop:gap-5 normal-laptop:gap-6 mb-6 small-laptop:mb-8">
         <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
-          <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800">Risk Level Distribution</h2>
+          <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800" data-tour="analytics-risk-chart">Risk Level Distribution</h2>
           {riskLevelData.length > 0 ? (
             <div className="h-[250px] small-laptop:h-[300px]">
               <Pie data={riskLevelChartData} options={pieChartOptions} />
@@ -481,7 +481,7 @@ const Analytics = () => {
         </div>
 
         <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
-          <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800">Connection Status</h2>
+          <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800" data-tour="analytics-connection-chart">Connection Status</h2>
           {connectionStatusData.length > 0 ? (
             <div className="h-[250px] small-laptop:h-[300px]">
               <Pie data={connectionStatusChartData} options={pieChartOptions} />
@@ -498,7 +498,7 @@ const Analytics = () => {
       <div className="grid grid-cols-1 normal-laptop:grid-cols-2 gap-4 small-laptop:gap-5 normal-laptop:gap-6 mb-6 small-laptop:mb-8">
         <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
           <div className="flex flex-col small-laptop:flex-row justify-between items-start small-laptop:items-center mb-3 small-laptop:mb-4 gap-2">
-            <h2 className="text-lg small-laptop:text-xl font-bold text-gray-800">Threat Type Distribution</h2>
+            <h2 className="text-lg small-laptop:text-xl font-bold text-gray-800" data-tour="analytics-threat-chart">Threat Type Distribution</h2>
             <div className="flex flex-wrap gap-1 small-laptop:gap-2">
               <Button
                 onClick={() => setThreatDateFilter('day')}
@@ -569,7 +569,7 @@ const Analytics = () => {
         </div>
 
         <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
-          <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800">Channel Usage</h2>
+          <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800" data-tour="analytics-channel-chart">Channel Usage</h2>
           {(channelData.some(v => v > 0)) ? (
             <div className="h-[250px] small-laptop:h-[300px]">
               <Bar data={channelUsageChartData} options={barChartOptions} />
@@ -585,7 +585,7 @@ const Analytics = () => {
       {/* Blacklist/Whitelist Stats */}
       <div className="grid grid-cols-1 normal-laptop:grid-cols-2 gap-4 small-laptop:gap-5 normal-laptop:gap-6 mb-6 small-laptop:mb-8">
         <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
-          <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800">Blacklist vs Whitelist</h2>
+          <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800" data-tour="analytics-list-stats">Blacklist vs Whitelist</h2>
           <div className="h-[200px] small-laptop:h-[250px] mb-3 small-laptop:mb-4">
             <Bar data={listComparisonChartData} options={barChartOptions} />
           </div>

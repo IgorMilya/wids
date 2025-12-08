@@ -18,8 +18,10 @@
     "@tauri-apps/plugin-fs": "^2.4.4",
     "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-store": "^2.2.0",
+    "@types/intro.js": "^5.1.5",
     "chart.js": "^4.5.1",
     "formik": "^2.4.6",
+    "intro.js": "^8.3.2",
     "js-cookie": "^3.0.5",
     "react": "^18.3.1",
     "react-chartjs-2": "^5.3.1",
@@ -27,6 +29,7 @@
     "react-google-recaptcha": "^2.1.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.6.0",
+    "shepherd.js": "^14.5.1",
     "vite-plugin-svgr": "^4.3.0",
     "yup": "^1.6.1"
   },

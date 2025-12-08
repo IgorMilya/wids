@@ -6,6 +6,7 @@ interface ButtonProps extends PropsWithChildren {
   onClick?: (e: MouseEvent<HTMLButtonElement>) => void,
   type?: 'submit' | 'button',
   className?: string,
+  [key: `data-${string}`]: string | undefined, // Allow data-* attributes
 }
 
 const styleOfVariant = {
@@ -23,14 +24,24 @@ const Button: FC<ButtonProps> = ({
                                    disabled,
                                    type,
                                    className = '',
+                                   ...restProps
                                  }) => {
 
   const colorClasses = styleOfVariant[variant]
+  
+  // Extract data-* attributes from restProps
+  const dataAttributes: { [key: string]: string } = {}
+  Object.keys(restProps).forEach(key => {
+    if (key.startsWith('data-')) {
+      dataAttributes[key] = (restProps as any)[key]
+    }
+  })
   
   return (
     <button
       className={`flex flex-row gap-4 items-center large-laptop:w-full wide-screen:w-full ultra-wide:w-full normal-laptop:w-full small-laptop:w-auto  p-2.5  font-bold rounded-md focus:outline-none  ${colorClasses} relative ${disabled ? 'opacity-50 cursor-not-allowed focus:ring-0' : ''} ${className}`}
       onClick={onClick} disabled={disabled} type={type || 'button'}
+      {...dataAttributes}
     >
       {children}
     </button>

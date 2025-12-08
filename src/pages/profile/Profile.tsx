@@ -476,7 +476,7 @@ const Profile: FC = () => {
 
   return (
     <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full max-w-full large-laptop:max-w-4xl">
-      <h1 className="font-bold text-lg small-laptop:text-xl normal-laptop:text-[20px] mb-4 small-laptop:mb-5 normal-laptop:mb-6">Profile Settings</h1>
+      <h1 className="font-bold text-lg small-laptop:text-xl normal-laptop:text-[20px] mb-4 small-laptop:mb-5 normal-laptop:mb-6" data-tour="profile-title">Profile Settings</h1>
 
       {/* Tab Navigation */}
       <div className="border-b border-gray-200 mb-4 small-laptop:mb-5 normal-laptop:mb-6 overflow-x-auto">
@@ -506,7 +506,7 @@ const Profile: FC = () => {
             <h2 className="text-base small-laptop:text-lg font-semibold mb-3 small-laptop:mb-4">Network Profiling Preferences</h2>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">Profiling Preference</label>
+          <label className="block text-sm font-medium mb-2" data-tour="profile-profiling-preference">Profiling Preference</label>
           <select
             value={profilingPreference}
             onChange={(e) => {
@@ -514,6 +514,7 @@ const Profile: FC = () => {
               setUserChangedProfiling(true)
             }}
             className="w-full p-2 border rounded-md"
+            data-tour="profile-profiling-preference-select"
           >
             <option value="speed">Speed</option>
             <option value="security">Security</option>
@@ -522,7 +523,7 @@ const Profile: FC = () => {
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">Speed Network Preference</label>
+          <label className="block text-sm font-medium mb-2" data-tour="profile-speed-preference">Speed Network Preference</label>
           <select
             value={speedNetworkPreference}
             onChange={(e) => {
@@ -530,6 +531,7 @@ const Profile: FC = () => {
               setUserChangedSpeed(true)
             }}
             className="w-full p-2 border rounded-md"
+            data-tour="profile-speed-preference-select"
           >
             <option value="high">High</option>
             <option value="medium">Medium</option>
@@ -538,7 +540,7 @@ const Profile: FC = () => {
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">Confidence Level</label>
+          <label className="block text-sm font-medium mb-2" data-tour="profile-confidence">Confidence Level</label>
           <select
             value={confidenceLevel}
             onChange={(e) => {
@@ -546,6 +548,7 @@ const Profile: FC = () => {
               setUserChangedConfidence(true)
             }}
             className="w-full p-2 border rounded-md"
+            data-tour="profile-confidence-select"
           >
             <option value="high">High</option>
             <option value="medium">Medium</option>
@@ -554,7 +557,7 @@ const Profile: FC = () => {
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">Profile Type</label>
+          <label className="block text-sm font-medium mb-2" data-tour="profile-type">Profile Type</label>
           <select
             value={profileType}
             onChange={(e) => {
@@ -562,6 +565,7 @@ const Profile: FC = () => {
               setUserChangedProfileType(true)
             }}
             className="w-full p-2 border rounded-md"
+            data-tour="profile-type-select"
           >
             <option value="personal">Personal</option>
             <option value="work">Work</option>
@@ -569,7 +573,7 @@ const Profile: FC = () => {
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">Preferred Authentication Types</label>
+          <label className="block text-sm font-medium mb-2" data-tour="profile-auth">Preferred Authentication Types</label>
           <div className="flex flex-wrap gap-3">
             {['WPA3', 'WPA2', 'WPA', 'Open'].map((auth) => {
               const isSecurityMode = profilingPreference === 'security'
@@ -603,7 +607,7 @@ const Profile: FC = () => {
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">
+          <label className="block text-sm font-medium mb-2" data-tour="profile-signal">
             Minimum Signal Strength: {minSignalStrength}%
           </label>
           <input
@@ -613,15 +617,17 @@ const Profile: FC = () => {
             value={minSignalStrength}
             onChange={(e) => setMinSignalStrength(parseInt(e.target.value))}
             className="w-full"
+            data-tour="profile-signal-slider"
           />
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">Maximum Risk Level</label>
+          <label className="block text-sm font-medium mb-2" data-tour="profile-risk">Maximum Risk Level</label>
           <select
             value={maxRiskLevel}
             onChange={(e) => setMaxRiskLevel(e.target.value)}
             className="w-full p-2 border rounded-md"
+            data-tour="profile-risk-select"
           >
             <option value="L">Low</option>
             <option value="M">Medium</option>

@@ -49,7 +49,7 @@ const Blacklist = () => {
   
   return (
     <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full max-w-full">
-      <h1 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4">Blacklist</h1>
+      <h1 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4" data-tour="blacklist-title">Blacklist</h1>
       {/* Search Bar */}
       <div className="mb-3 small-laptop:mb-4 flex flex-col small-laptop:flex-row gap-2">
         <input

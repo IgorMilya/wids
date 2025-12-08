@@ -129,7 +129,8 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
   return (
     <>
       <tr onClick={onToggle}
-          className={`border-b border-gray-700 text-center hover:bg-gray-100 transition ${isShowNetwork ? 'bg-[rgba(232,231,231,1)]' : ''}`}>
+          className={`border-b border-gray-700 text-center hover:bg-gray-100 transition ${isShowNetwork ? 'bg-[rgba(232,231,231,1)]' : ''}`}
+          data-tour="network-row">
         <td className="p-3">
           {!ssid ? 'Hidden Network' : (
             <>
@@ -150,7 +151,7 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
       {isShowNetwork && (
         <tr className="bg-[rgba(232,231,231,1)]">
           <td colSpan={6} className="p-5">
-            <div className="flex gap-5">
+            <div className="flex gap-5" data-tour="network-actions">
               <div className="w-[150px]">
                 <Button
                   onClick={() => handleOpenModal(ssid)}

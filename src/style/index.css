@@ -32,3 +32,56 @@ input {
         animation: slide-in-right 0.3s ease-out;
     }
 }
+
+/* Shepherd.js custom theme */
+.shepherd-theme-custom {
+    max-width: 400px;
+}
+
+.shepherd-theme-custom .shepherd-content {
+    border-radius: 8px;
+    padding: 1.5rem;
+    background: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.shepherd-theme-custom .shepherd-text {
+    color: #333;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.shepherd-theme-custom .shepherd-button {
+    background: #3e3caa;
+    color: white;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.shepherd-theme-custom .shepherd-button:hover {
+    background: #2d2b7a;
+}
+
+.shepherd-theme-custom .shepherd-button.shepherd-button-secondary {
+    background: #6b7280;
+}
+
+.shepherd-theme-custom .shepherd-button.shepherd-button-secondary:hover {
+    background: #4b5563;
+}
+
+.shepherd-theme-custom .shepherd-header {
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.shepherd-theme-custom .shepherd-cancel-icon {
+    color: #6b7280;
+    font-size: 1.5rem;
+}
+
+.shepherd-theme-custom .shepherd-cancel-icon:hover {
+    color: #374151;
+}

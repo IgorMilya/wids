@@ -396,11 +396,12 @@ const Scanner: FC = () => {
           </p>
         </div>
       )}
-      <h1 className="font-bold text-lg small-laptop:text-xl normal-laptop:text-[20px] mb-2 small-laptop:mb-[10px]">Wireless Intrusion Prevention System</h1>
+      <h1 className="font-bold text-lg small-laptop:text-xl normal-laptop:text-[20px] mb-2 small-laptop:mb-[10px]" data-tour="scanner-title">Wireless Intrusion Prevention System</h1>
       {!!activeNetwork?.ssid &&
         <div className="relative">
           <div onClick={onIsActive}
-               className="bg-secondary text-white p-3 small-laptop:p-4 mb-3 small-laptop:mb-4 rounded-t shadow flex flex-col small-laptop:flex-row justify-between items-start small-laptop:items-center gap-2 small-laptop:gap-0 cursor-pointer">
+               className="bg-secondary text-white p-3 small-laptop:p-4 mb-3 small-laptop:mb-4 rounded-t shadow flex flex-col small-laptop:flex-row justify-between items-start small-laptop:items-center gap-2 small-laptop:gap-0 cursor-pointer"
+               data-tour="current-network">
             <div className="flex-1">
               <p className="font-semibold text-sm small-laptop:text-base">Connected to: <span className="text-green-300">{activeNetwork.ssid}</span>
               </p>
@@ -410,7 +411,8 @@ const Scanner: FC = () => {
             </div>
           </div>
           {isActive &&
-            <div className="bg-[rgb(70,8,118)] text-white p-4 small-laptop:p-5 rounded-b shadow absolute top-[auto] small-laptop:top-[72px] left-0 right-0 small-laptop:right-auto z-10">
+            <div className="bg-[rgb(70,8,118)] text-white p-4 small-laptop:p-5 rounded-b shadow absolute top-[auto] small-laptop:top-[72px] left-0 right-0 small-laptop:right-auto z-10"
+                 data-tour="network-details">
               <p className="font-bold">BSSID: <span className="font-normal">{activeNetwork.bssid}</span></p>
               <p className="font-bold">Signal: <span className="font-normal">{activeNetwork.signal}</span></p>
               <p className="font-bold">Risk: <Chip risk={activeNetwork.risk} /></p>
@@ -422,7 +424,7 @@ const Scanner: FC = () => {
         </div>
       }
       <div className="w-full small-laptop:w-[100px] mb-3 small-laptop:mb-5 mt-3 small-laptop:mt-5">
-        <Button variant="secondary" onClick={scanWifi}>
+        <Button variant="secondary" onClick={scanWifi} data-tour="scan-button">
           {isScanning ? 'Scanning...' : 'Scan'}
         </Button>
       </div>
@@ -433,6 +435,7 @@ const Scanner: FC = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search by SSID, Encryption, Authentication, or Risk"
           className="px-3 small-laptop:px-4 py-2 rounded w-full text-sm small-laptop:text-base border border-gray-300 focus:outline-none focus:ring focus:border-blue-400"
+          data-tour="scanner-search"
         />
       </div>
       <div className="flex gap-2 mb-3 small-laptop:mb-5 flex-wrap">

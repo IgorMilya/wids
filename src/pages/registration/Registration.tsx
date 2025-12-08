@@ -96,7 +96,12 @@ export const Registration = () => {
         })
       )
 
-      navigate(ROUTES.DASHBOARD)
+      // Clear any existing tour state for new registration
+      localStorage.removeItem('wisp_tour_started')
+      localStorage.removeItem('wisp_tour_completed')
+      
+      // Navigate to Scanner where tour will start
+      navigate(ROUTES.SCANNER)
     } catch (err: any) {
       console.error(err)
       setError(err?.data?.error || 'Verification failed. Please try again.')
