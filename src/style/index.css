@@ -3,11 +3,34 @@
 @tailwind utilities;
 
 * {
-    box-sizing: border-box
+    box-sizing: border-box;
+    transition: all 0.3s ease;
 }
 
 input {
     outline: none;
+}
+
+/* Cursor pointer for interactive elements */
+select,
+button,
+[role="button"],
+[role="combobox"],
+input[type="checkbox"],
+input[type="radio"],
+label[for],
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Smooth transitions for specific elements */
+select,
+button,
+input,
+textarea,
+[role="button"],
+[role="combobox"] {
+    transition: all 0.3s ease;
 }
 
 @layer components {

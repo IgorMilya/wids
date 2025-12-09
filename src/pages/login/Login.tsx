@@ -74,7 +74,7 @@ export const Login = () => {
       recaptchaRef.current?.reset()
       setCaptchaToken(null)
 
-      navigate('/dashboard')
+      navigate('/scanner')
     } catch (err: any) {
       console.error('Login error:', err)
       // Backend returns {"error": "..."} for failed login

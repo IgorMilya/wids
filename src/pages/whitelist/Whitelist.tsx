@@ -12,6 +12,7 @@ const Whitelist = () => {
   const [searchDate, setSearchDate] = useState(''); // e.g. "2025-06-08"
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('') // debounced value
   const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null)
 
   // Debounce logic: update debouncedSearchTerm 800ms after user stops typing
   useEffect(() => {
@@ -70,20 +71,61 @@ const Whitelist = () => {
       </div>
 
       {isError && <p className="text-red-500">Error: {String(error)}</p>}
-      {isLoading ? (
-        <p>Loading...</p>
-      ) : (
-        <Table tableTitle={tableWhitelistTitle} notDataFound={!isLoading && data?.length === 0}>
-          {data?.map((network, index) => (
-            <TableWhitelist
-              isShowNetwork={openIndex === index}
-              onToggle={() => onToggle(index)}
-              key={network.id}
-              network={network}
-            />
-          ))}
-        </Table>
-      )}
+      <Table 
+        tableTitle={tableWhitelistTitle} 
+        notDataFound={!isLoading && data?.length === 0}
+        isLoading={isLoading}
+        columnWidths={['35%', '35%', '30%']}
+        onSort={(column) => {
+          setSortConfig(prev => {
+            if (prev?.key === column) {
+              return { key: column, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
+            }
+            return { key: column, direction: 'asc' }
+          })
+        }}
+        sortConfig={sortConfig}
+      >
+        {data?.sort((a, b) => {
+          if (!sortConfig) return 0
+          
+          const { key, direction } = sortConfig
+          let aValue: any
+          let bValue: any
+          
+          switch (key) {
+            case 'SSID':
+              aValue = a.ssid || ''
+              bValue = b.ssid || ''
+              break
+            case 'BSSID':
+              aValue = a.bssid || ''
+              bValue = b.bssid || ''
+              break
+            case 'Added at':
+              aValue = new Date(a.timestamp).getTime()
+              bValue = new Date(b.timestamp).getTime()
+              break
+            default:
+              return 0
+          }
+          
+          if (typeof aValue === 'string' && typeof bValue === 'string') {
+            return direction === 'asc' 
+              ? aValue.localeCompare(bValue)
+              : bValue.localeCompare(aValue)
+          }
+          
+          return direction === 'asc' ? aValue - bValue : bValue - aValue
+        }).map((network, index) => (
+          <TableWhitelist
+            isShowNetwork={openIndex === index}
+            onToggle={() => onToggle(index)}
+            key={network.id}
+            network={network}
+          />
+        ))}
+      </Table>
     </div>
   )
 }

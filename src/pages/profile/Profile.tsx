@@ -642,7 +642,43 @@ const Profile: FC = () => {
           )}
         </div>
 
-            <div className="mt-6">
+            <div className="mt-6 flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  // Reset all filters to show all networks
+                  // Set values that allow maximum flexibility
+                  setProfileType('personal')
+                  setConfidenceLevel('low') // Low confidence allows all risk levels including Critical
+                  setPreferredAuth(['WPA3', 'WPA2', 'WPA', 'Open'])
+                  setSpeedNetworkPreference('medium')
+                  setProfilingPreference('balanced')
+                  
+                  // Mark all as user changed to trigger useEffects
+                  setUserChangedProfiling(true)
+                  setUserChangedSpeed(true)
+                  setUserChangedConfidence(true)
+                  setUserChangedProfileType(true)
+                  
+                  // Set final values after useEffects have processed
+                  // Use requestAnimationFrame for better timing
+                  requestAnimationFrame(() => {
+                    setTimeout(() => {
+                      // Override any changes from useEffects
+                      setMinSignalStrength(0)
+                      setMaxRiskLevel('C')
+                      setPreferredAuth(['WPA3', 'WPA2', 'WPA', 'Open'])
+                      // Ensure values stay set with one more frame
+                      requestAnimationFrame(() => {
+                        setMinSignalStrength(0)
+                        setMaxRiskLevel('C')
+                      })
+                    }, 100)
+                  })
+                }}
+              >
+                Reset to Show All Networks
+              </Button>
               <Button variant="secondary" onClick={handleSaveProfile}>
                 Save Profile Settings
               </Button>

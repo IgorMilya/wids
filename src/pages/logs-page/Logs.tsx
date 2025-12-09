@@ -257,7 +257,20 @@ const Logs = () => {
           className="border px-3 py-2 rounded w-full small-laptop:w-auto text-sm small-laptop:text-base"
           title="Date Till"
         />
-        <div>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => {
+              setSearchTerm('')
+              setSearchAction('')
+              setSearchDateFrom('')
+              setSearchDateTill('')
+              setPage(1)
+            }}
+            type="button"
+            variant="outline"
+          >
+            Reset Search
+          </Button>
           <Button
             onClick={exportToCSV}
             type="button"
@@ -270,14 +283,18 @@ const Logs = () => {
       </div>
 
       {isError && <p className="text-red-500">{String(error)}</p>}
-      {isLoading ? <p>Loading...</p> : (
-        <Table tableTitle={['SSID', 'BSSID', 'Action', 'Timestamp', 'Details']} notDataFound={!sortedData.length}
-          onSort={handleSort} sortConfig={sortConfig}>
-          {sortedData.map((log) => (
-            <TableLogs log={log} key={log.id} />
-          ))}
-        </Table>
-      )}
+      <Table 
+        tableTitle={['SSID', 'BSSID', 'Action', 'Timestamp', 'Details']} 
+        notDataFound={!isLoading && !sortedData.length}
+        onSort={handleSort} 
+        sortConfig={sortConfig}
+        isLoading={isLoading}
+        columnWidths={['20%', '18%', '15%', '20%', '27%']}
+      >
+        {sortedData.map((log) => (
+          <TableLogs log={log} key={log.id} />
+        ))}
+      </Table>
       {!!logs.length &&
         <div className="flex gap-2 mt-3 small-laptop:mt-4 items-center justify-center small-laptop:justify-start text-sm small-laptop:text-base">
           {/* <button

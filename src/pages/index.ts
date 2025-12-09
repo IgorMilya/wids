@@ -1,7 +1,6 @@
 export { HomeLayout } from './home-layout'
 export { Analytics } from './analytics'
 export { Blacklist } from './blacklist'
-export { Dashboard } from './dashboard'
 export { Scanner } from './scanner'
 export { Whitelist } from './whitelist'
 export { Login } from './login'

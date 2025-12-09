@@ -2,7 +2,6 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import {
   Analytics,
   Blacklist,
-  Dashboard,
   HomeLayout,
   Scanner,
   Whitelist,
@@ -26,9 +25,8 @@ export const AppRouter = () => {
 
       {/* Protected routes */}
       <Route element={<ProtectedRoute />}>
-        <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.DASHBOARD} />} />
+        <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.SCANNER} />} />
         <Route path={ROUTES.HOME} element={<HomeLayout />}>
-          <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
           <Route path={ROUTES.SCANNER} element={<Scanner />} />
           <Route path={ROUTES.BLACKLIST} element={<Blacklist />} />
           <Route path={ROUTES.WHITELIST} element={<Whitelist />} />

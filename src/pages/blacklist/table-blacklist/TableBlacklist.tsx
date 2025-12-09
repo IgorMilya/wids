@@ -37,9 +37,9 @@ const TableBlacklist: FC<TableBlacklistProps> = ({ network, isShowNetwork, onTog
   return (
     <>
       <tr onClick={onToggle} className={`border-b border-gray-700 text-center hover:bg-gray-100 transition ${isShowNetwork ? 'bg-[rgba(232,231,231,1)]' : ''}`}>
-        <td className="p-3">{ssid || 'Hidden Network'}</td>
-        <td className="p-3">{bssid || 'Hidden'}</td>
-        <td className="p-3">{new Date(timestamp).toLocaleString()}</td>
+        <td className="p-3" style={{ width: '35%' }}>{ssid || 'Hidden Network'}</td>
+        <td className="p-3" style={{ width: '35%' }}>{bssid || 'Hidden'}</td>
+        <td className="p-3" style={{ width: '30%' }}>{new Date(timestamp).toLocaleString()}</td>
       </tr>
       {isShowNetwork && (
         <tr className="bg-[rgba(232,231,231,1)]">

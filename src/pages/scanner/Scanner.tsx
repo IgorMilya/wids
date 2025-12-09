@@ -31,6 +31,7 @@ const Scanner: FC = () => {
   const [addLog] = useAddLogMutation()
   const [activeRiskFilter, setActiveRiskFilter] = useState<string | null>(null)
   const [isScanning, setIsScanning] = useState(false)
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null)
   
   // Use cached networks if temp user, otherwise use API data
   const effectiveBlacklist = isTempUser ? cachedNetworks.blacklist : blacklist
@@ -458,8 +459,76 @@ const Scanner: FC = () => {
         ))}
       </div>
       <div className="overflow-x-auto">
-        <Table tableTitle={tableTitle} notDataFound={!networks.length} minH='min-h-[300px] small-laptop:min-h-[400px]' maxH='max-h-[400px]'>
-          {filterOnActiveNetwork()?.map((row, index) => (
+        <Table 
+          tableTitle={tableTitle} 
+          notDataFound={!networks.length && !isScanning} 
+          minH='min-h-[300px] small-laptop:min-h-[400px]' 
+          maxH='max-h-[400px]'
+          isLoading={isScanning}
+          columnWidths={['20%', '15%', '15%', '18%', '10%', '12%']}
+          onSort={(column) => {
+            setSortConfig(prev => {
+              if (prev?.key === column) {
+                return { key: column, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
+              }
+              return { key: column, direction: 'asc' }
+            })
+          }}
+          sortConfig={sortConfig}
+        >
+          {filterOnActiveNetwork()?.sort((a, b) => {
+            if (!sortConfig) return 0
+            
+            const { key, direction } = sortConfig
+            let aValue: any
+            let bValue: any
+            
+            switch (key) {
+              case 'SSID':
+                aValue = a.ssid || ''
+                bValue = b.ssid || ''
+                break
+              case 'Authentication':
+                aValue = a.authentication || ''
+                bValue = b.authentication || ''
+                break
+              case 'Encryption':
+                aValue = a.encryption || ''
+                bValue = b.encryption || ''
+                break
+              case 'BSSID':
+                aValue = a.bssid || ''
+                bValue = b.bssid || ''
+                break
+              case 'Signal':
+                // Parse signal value - remove % and any non-numeric characters, then convert to number
+                const parseSignal = (signal: string | undefined): number => {
+                  if (!signal) return 0
+                  // Remove % and any non-numeric characters except decimal point
+                  const cleaned = signal.toString().replace(/[^0-9.]/g, '')
+                  const parsed = parseFloat(cleaned)
+                  return isNaN(parsed) ? 0 : parsed
+                }
+                aValue = parseSignal(a.signal)
+                bValue = parseSignal(b.signal)
+                break
+              case 'Risk':
+                const riskOrder = { 'WL': 0, 'L': 1, 'M': 2, 'H': 3, 'C': 4 }
+                aValue = riskOrder[a.risk as keyof typeof riskOrder] ?? 5
+                bValue = riskOrder[b.risk as keyof typeof riskOrder] ?? 5
+                break
+              default:
+                return 0
+            }
+            
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+              return direction === 'asc' 
+                ? aValue.localeCompare(bValue)
+                : bValue.localeCompare(aValue)
+            }
+            
+            return direction === 'asc' ? aValue - bValue : bValue - aValue
+          }).map((row, index) => (
             <TableScanner
               key={index}
               isShowNetwork={openIndex === index}

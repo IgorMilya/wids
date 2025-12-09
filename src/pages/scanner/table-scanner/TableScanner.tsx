@@ -24,12 +24,18 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
   const { description, verdict } = getNetworkVerdict(data)
 
   const logAction = (action: string, details?: string) => {
-    addLog({
-      network_ssid: ssid || 'Hidden',
-      network_bssid: bssid || undefined,
-      action,
-      details,
-    })
+    // Only log if not a temp user (temp users are in offline mode)
+    if (!isTempUser) {
+      addLog({
+        network_ssid: ssid || 'Hidden',
+        network_bssid: bssid || undefined,
+        action,
+        details,
+      }).catch((error) => {
+        // Silently fail logging in offline mode - don't redirect user
+        console.warn('Failed to log action (offline mode):', error)
+      })
+    }
   }
   const connectToWifi = async (ssid: string) => {
     setIsConnecting(true)
@@ -131,7 +137,7 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
       <tr onClick={onToggle}
           className={`border-b border-gray-700 text-center hover:bg-gray-100 transition ${isShowNetwork ? 'bg-[rgba(232,231,231,1)]' : ''}`}
           data-tour="network-row">
-        <td className="p-3">
+        <td className="p-3" style={{ width: '20%' }}>
           {!ssid ? 'Hidden Network' : (
             <>
               {ssid}
@@ -139,11 +145,11 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
             </>
           )}
         </td>
-        <td className="p-3">{!authentication ? 'Hidden Network' : authentication}</td>
-        <td className="p-3">{!encryption ? 'Hidden Network' : encryption}</td>
-        <td className="p-3">{!bssid ? 'Hidden Network' : bssid}</td>
-        <td className="p-3">{!signal ? 'Hidden Network' : signal}</td>
-        <td className="p-3"><Chip risk={risk} /></td>
+        <td className="p-3" style={{ width: '15%' }}>{!authentication ? 'Hidden Network' : authentication}</td>
+        <td className="p-3" style={{ width: '15%' }}>{!encryption ? 'Hidden Network' : encryption}</td>
+        <td className="p-3" style={{ width: '18%' }}>{!bssid ? 'Hidden Network' : bssid}</td>
+        <td className="p-3" style={{ width: '10%' }}>{!signal ? 'Hidden Network' : signal}</td>
+        <td className="p-3" style={{ width: '12%' }}><Chip risk={risk} /></td>
 
 
       </tr>

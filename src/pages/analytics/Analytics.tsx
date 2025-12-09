@@ -50,8 +50,8 @@ const Analytics = () => {
     {
       // Refetch when window regains focus (user comes back to the tab)
       refetchOnFocus: true,
-      // Automatically refetch every 15 seconds while on this page
-      pollingInterval: 15000,
+      // Cache invalidation will trigger refetch automatically when data changes
+      // No need for polling - analytics updates immediately via cache invalidation
     }
   )
 
