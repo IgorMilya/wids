@@ -9,7 +9,7 @@ export const createTourSteps = (
   // Step 1: Welcome and explain Scanner page
   tour.addStep({
     id: 'welcome-scanner',
-    text: 'Welcome to WISP! This is the Scanner page where you can discover and analyze Wi-Fi networks. Let\'s start by exploring the main features.',
+    text: 'Welcome to Risk Assessment & Detection System! This is the Scanner page where you can discover and analyze Wi-Fi networks. Let\'s start by exploring the main features.',
     attachTo: {
       element: '[data-tour="scanner-title"]',
       on: 'bottom',

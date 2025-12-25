@@ -397,7 +397,7 @@ const Scanner: FC = () => {
           </p>
         </div>
       )}
-      <h1 className="font-bold text-lg small-laptop:text-xl normal-laptop:text-[20px] mb-2 small-laptop:mb-[10px]" data-tour="scanner-title">Wireless Intrusion Prevention System</h1>
+      <h1 className="font-bold text-lg small-laptop:text-xl normal-laptop:text-[20px] mb-2 small-laptop:mb-[10px]" data-tour="scanner-title">Risk Assesment & Detection System</h1>
       {!!activeNetwork?.ssid &&
         <div className="relative">
           <div onClick={onIsActive}

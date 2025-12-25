@@ -7,7 +7,6 @@ use std::{process::Command, thread, time::Duration};
 
 #[tauri::command]
 pub fn scan_wifi() -> Result<Vec<WifiNetwork>, String> {
-    // Check WiFi adapter state first
     let interface_output = Command::new("netsh")
         .args(["wlan", "show", "interfaces"])
         .output()
@@ -15,7 +14,6 @@ pub fn scan_wifi() -> Result<Vec<WifiNetwork>, String> {
 
     let interface_result = String::from_utf8_lossy(&interface_output.stdout);
     
-    // Check if WiFi adapter is enabled
     let mut has_interface = false;
     let mut radio_software_off = false;
     
@@ -23,14 +21,11 @@ pub fn scan_wifi() -> Result<Vec<WifiNetwork>, String> {
     for (i, line) in lines.iter().enumerate() {
         let trimmed = line.trim();
         
-        // Check for interface state
         if trimmed.starts_with("State") {
             has_interface = true;
         }
         
-        // Check for radio status - the next line(s) after "Radio status" contain the status
         if trimmed.contains("Radio status") {
-            // Check the next few lines for "Software Off"
             for j in (i + 1)..std::cmp::min(i + 5, lines.len()) {
                 if lines[j].contains("Software Off") {
                     radio_software_off = true;
@@ -39,7 +34,6 @@ pub fn scan_wifi() -> Result<Vec<WifiNetwork>, String> {
             }
         }
         
-        // Also check if the line itself contains Software Off
         if trimmed.contains("Software Off") {
             radio_software_off = true;
         }
@@ -53,7 +47,6 @@ pub fn scan_wifi() -> Result<Vec<WifiNetwork>, String> {
         return Err("WiFi adapter is turned off. Please enable WiFi in Windows Settings or use the WiFi toggle in the system tray.".to_string());
     }
 
-    // Try to trigger scan
     trigger_scan();
     thread::sleep(Duration::from_secs(2));
 
@@ -65,7 +58,6 @@ pub fn scan_wifi() -> Result<Vec<WifiNetwork>, String> {
     let result = String::from_utf8_lossy(&output.stdout);
     println!("{}", result);
     
-    // Check if the output indicates an error
     if result.contains("The wireless local area network interface is powered down") {
         return Err("WiFi adapter is powered down. Please enable WiFi in Windows Settings.".to_string());
     }
