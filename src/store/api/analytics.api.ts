@@ -148,6 +148,8 @@ export const analyticsApi = api.injectEndpoints({
         return `/analytics${queryString ? `?${queryString}` : ''}`
       },
       providesTags: ['Analytics'],
+      // Cache data for 5 minutes - only refetch if data is older than 5 minutes
+      keepUnusedDataFor: 300, // 5 minutes in seconds
     }),
   }),
 })

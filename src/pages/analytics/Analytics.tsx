@@ -1,6 +1,5 @@
 import React from 'react'
 import { useGetAnalyticsQuery } from 'store/api'
-import { Button } from 'UI'
 import {
   Chart as ChartJS,
   ArcElement,
@@ -14,7 +13,6 @@ import {
   Title,
   Filler,
 } from 'chart.js'
-import { Pie, Bar, Line } from 'react-chartjs-2'
 
 // Register Chart.js components
 ChartJS.register(
@@ -30,32 +28,42 @@ ChartJS.register(
   Filler
 )
 
-const COLORS = {
-  highRisk: '#ef4444',
-  mediumRisk: '#f59e0b',
-  lowRisk: '#10b981',
-  primary: '#3e3caa',
-  secondary: '#6366f1',
-  success: '#22c55e',
-  warning: '#f59e0b',
-  danger: '#ef4444',
-}
+import { RiskLevelChart } from 'components/RiskLevelChart'
+import { ConnectionStatusChart } from 'components/ConnectionStatusChart'
+import { ThreatTypeChart } from 'components/ThreatTypeChart'
+import { ChannelUsageChart } from 'components/ChannelUsageChart'
+import { BlacklistWhitelistChart } from 'components/BlacklistWhitelistChart'
 
-const Analytics = () => {
-  // Hooks must be called unconditionally before any early returns
+const Analytics = React.memo(() => {
   const [threatDateFilter, setThreatDateFilter] = React.useState<'day' | 'week' | 'month' | 'year' | 'all'>('all')
   
-  const { data, isLoading, isError } = useGetAnalyticsQuery(
+  // Use a ref to track if we've loaded data at least once
+  const hasLoadedDataRef = React.useRef(false)
+  
+  const { data, isLoading, isError, isFetching } = useGetAnalyticsQuery(
     { threatDateFilter },
     {
-      // Refetch when window regains focus (user comes back to the tab)
-      refetchOnFocus: true,
-      // Cache invalidation will trigger refetch automatically when data changes
-      // No need for polling - analytics updates immediately via cache invalidation
+      // Only refetch when threatDateFilter argument changes (creates different query key)
+      // Cache invalidation from mutations will still trigger automatic refetch
+      refetchOnMountOrArgChange: true,
+      // Don't refetch on window focus - use cached data
+      refetchOnFocus: false,
+      // Don't refetch on reconnect - use cached data
+      refetchOnReconnect: false,
     }
   )
+  
+  // Track if we've loaded data
+  React.useEffect(() => {
+    if (data) {
+      hasLoadedDataRef.current = true
+    }
+  }, [data])
 
-  if (isLoading) {
+  // Show cached data immediately if available, even if refetching in background
+  // Only show loading spinner on initial load when there's no cached data
+  // If we've loaded data before, show it even if isLoading is true (background refetch)
+  if (isLoading && !data && !hasLoadedDataRef.current) {
     return (
       <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full flex items-center justify-center min-h-screen">
         <div className="text-lg small-laptop:text-xl">Loading analytics...</div>
@@ -63,7 +71,7 @@ const Analytics = () => {
     )
   }
 
-  if (isError || !data) {
+  if (isError && !data) {
     return (
       <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full flex items-center justify-center min-h-screen">
         <div className="text-lg small-laptop:text-xl text-red-500">Failed to load analytics</div>
@@ -71,364 +79,13 @@ const Analytics = () => {
     )
   }
 
-  const { security_metrics, connection_stats, blacklist_whitelist, user_activity, network_stats, time_series, threat_analytics } = data
-
-  // Risk Level Distribution Pie Chart
-  const riskLevelData = [
-    security_metrics.high_risk_connections,
-    security_metrics.medium_risk_connections,
-    security_metrics.low_risk_connections,
-  ].filter((val) => val > 0)
-
-  const riskLevelLabels = [
-    'High Risk',
-    'Medium Risk',
-    'Low Risk',
-  ].filter((_, idx) => [
-    security_metrics.high_risk_connections,
-    security_metrics.medium_risk_connections,
-    security_metrics.low_risk_connections,
-  ][idx] > 0)
-
-  const riskLevelChartData = {
-    labels: riskLevelLabels,
-    datasets: [
-      {
-        label: 'Risk Level Distribution',
-        data: riskLevelData,
-        backgroundColor: [
-          COLORS.highRisk,
-          COLORS.mediumRisk,
-          COLORS.lowRisk,
-        ].slice(0, riskLevelData.length),
-        borderColor: [
-          COLORS.highRisk,
-          COLORS.mediumRisk,
-          COLORS.lowRisk,
-        ].slice(0, riskLevelData.length),
-        borderWidth: 2,
-      },
-    ],
+  // If we have data (even if stale), show it while refetching in background
+  // This ensures instant display when navigating back to the page
+  if (!data) {
+    return null
   }
 
-  // Connection Status Pie Chart
-  const connectionStatusData = [
-    security_metrics.successful_connections,
-    security_metrics.failed_attempts,
-  ].filter((val) => val > 0)
-
-  const connectionStatusLabels = ['Successful', 'Failed'].filter((_, idx) => [
-    security_metrics.successful_connections,
-    security_metrics.failed_attempts,
-  ][idx] > 0)
-
-  const connectionStatusChartData = {
-    labels: connectionStatusLabels,
-    datasets: [
-      {
-        label: 'Connection Status',
-        data: connectionStatusData,
-        backgroundColor: [COLORS.success, COLORS.danger].slice(0, connectionStatusData.length),
-        borderColor: [COLORS.success, COLORS.danger].slice(0, connectionStatusData.length),
-        borderWidth: 2,
-      },
-    ],
-  }
-
-  // Threat Type Distribution - Donut Chart
-  const threatTypeData = [
-    threat_analytics.threat_type_distribution.rogue_aps,
-    threat_analytics.threat_type_distribution.evil_twins,
-    threat_analytics.threat_type_distribution.suspicious_open_networks,
-    threat_analytics.threat_type_distribution.weak_encryption,
-    threat_analytics.threat_type_distribution.deauth_attacks,
-    threat_analytics.threat_type_distribution.mac_spoof_attempts,
-    threat_analytics.threat_type_distribution.blacklisted_networks_detected,
-  ].filter((val) => val > 0)
-
-  const threatTypeLabels = [
-    'Rogue APs',
-    'Evil Twins',
-    'Suspicious Open Networks',
-    'Weak Encryption',
-    'Deauth Attacks',
-    'MAC Spoof Attempts',
-    'Blacklisted Networks Detected',
-  ].filter((_, idx) => [
-    threat_analytics.threat_type_distribution.rogue_aps,
-    threat_analytics.threat_type_distribution.evil_twins,
-    threat_analytics.threat_type_distribution.suspicious_open_networks,
-    threat_analytics.threat_type_distribution.weak_encryption,
-    threat_analytics.threat_type_distribution.deauth_attacks,
-    threat_analytics.threat_type_distribution.mac_spoof_attempts,
-    threat_analytics.threat_type_distribution.blacklisted_networks_detected,
-  ][idx] > 0)
-
-  const threatTypeChartData = {
-    labels: threatTypeLabels,
-    datasets: [
-      {
-        label: 'Threat Type Distribution',
-        data: threatTypeData,
-        backgroundColor: [
-          COLORS.danger,
-          '#dc2626',
-          COLORS.warning,
-          '#f59e0b',
-          COLORS.primary,
-          COLORS.secondary,
-          '#7c3aed',
-        ].slice(0, threatTypeData.length),
-        borderColor: [
-          COLORS.danger,
-          '#dc2626',
-          COLORS.warning,
-          '#f59e0b',
-          COLORS.primary,
-          COLORS.secondary,
-          '#7c3aed',
-        ].slice(0, threatTypeData.length),
-        borderWidth: 2,
-      },
-    ],
-  }
-
-  // Channel Usage - Bar Chart
-  const channelLabels = ['Channel 1', 'Channel 6', 'Channel 11', ...threat_analytics.channel_usage.channels_5ghz.map(c => `Ch ${c.channel}`)]
-  const channelData = [
-    threat_analytics.channel_usage.channel_1,
-    threat_analytics.channel_usage.channel_6,
-    threat_analytics.channel_usage.channel_11,
-    ...threat_analytics.channel_usage.channels_5ghz.map(c => c.count),
-  ]
-
-  const channelUsageChartData = {
-    labels: channelLabels,
-    datasets: [
-      {
-        label: 'AP Count',
-        data: channelData,
-        backgroundColor: [
-          COLORS.primary,
-          COLORS.secondary,
-          COLORS.warning,
-          ...threat_analytics.channel_usage.channels_5ghz.map(() => '#8b5cf6'),
-        ],
-        borderColor: [
-          COLORS.primary,
-          COLORS.secondary,
-          COLORS.warning,
-          ...threat_analytics.channel_usage.channels_5ghz.map(() => '#8b5cf6'),
-        ],
-        borderWidth: 1,
-        borderRadius: 4,
-      },
-    ],
-  }
-
-  // Blacklist vs Whitelist Bar Chart
-  const listComparisonChartData = {
-    labels: ['Blacklisted', 'Whitelisted'],
-    datasets: [
-      {
-        label: 'Total Networks',
-        data: [blacklist_whitelist.total_blacklisted, blacklist_whitelist.total_whitelisted],
-        backgroundColor: [COLORS.danger, COLORS.success],
-        borderColor: [COLORS.danger, COLORS.success],
-        borderWidth: 2,
-        borderRadius: 4,
-      },
-    ],
-  }
-
-  // Chart options
-  const pieChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'bottom' as const,
-        labels: {
-          padding: 15,
-          font: {
-            size: 12,
-            weight: 'bold' as const,
-          },
-          usePointStyle: true,
-        },
-      },
-      tooltip: {
-        callbacks: {
-          label: function (context: any) {
-            const label = context.label || ''
-            const value = context.parsed || 0
-            const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0)
-            const percentage = ((value / total) * 100).toFixed(1)
-            return `${label}: ${value} (${percentage}%)`
-          },
-        },
-        padding: 12,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleFont: {
-          size: 14,
-          weight: 'bold' as const,
-        },
-        bodyFont: {
-          size: 12,
-        },
-      },
-    },
-  }
-
-  const lineChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: 'index' as const,
-      intersect: false,
-    },
-    plugins: {
-      legend: {
-        position: 'top' as const,
-        labels: {
-          padding: 15,
-          font: {
-            size: 12,
-            weight: 'bold' as const,
-          },
-          usePointStyle: true,
-        },
-      },
-      tooltip: {
-        padding: 12,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleFont: {
-          size: 14,
-          weight: 'bold' as const,
-        },
-        bodyFont: {
-          size: 12,
-        },
-      },
-    },
-    scales: {
-      x: {
-        grid: {
-          display: true,
-          color: 'rgba(0, 0, 0, 0.05)',
-        },
-        ticks: {
-          font: {
-            size: 11,
-          },
-        },
-      },
-      y: {
-        beginAtZero: true,
-        grid: {
-          display: true,
-          color: 'rgba(0, 0, 0, 0.05)',
-        },
-        ticks: {
-          font: {
-            size: 11,
-          },
-        },
-      },
-    },
-  }
-
-  const barChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false,
-      },
-      tooltip: {
-        padding: 12,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleFont: {
-          size: 14,
-          weight: 'bold' as const,
-        },
-        bodyFont: {
-          size: 12,
-        },
-      },
-    },
-    scales: {
-      x: {
-        grid: {
-          display: true,
-          color: 'rgba(0, 0, 0, 0.05)',
-        },
-        ticks: {
-          font: {
-            size: 11,
-          },
-        },
-      },
-      y: {
-        beginAtZero: true,
-        grid: {
-          display: true,
-          color: 'rgba(0, 0, 0, 0.05)',
-        },
-        ticks: {
-          font: {
-            size: 11,
-          },
-        },
-      },
-    },
-  }
-
-  const horizontalBarChartOptions = {
-    indexAxis: 'y' as const,
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false,
-      },
-      tooltip: {
-        padding: 12,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleFont: {
-          size: 14,
-          weight: 'bold' as const,
-        },
-        bodyFont: {
-          size: 12,
-        },
-      },
-    },
-    scales: {
-      x: {
-        beginAtZero: true,
-        grid: {
-          display: true,
-          color: 'rgba(0, 0, 0, 0.05)',
-        },
-        ticks: {
-          font: {
-            size: 11,
-          },
-        },
-      },
-      y: {
-        grid: {
-          display: false,
-        },
-        ticks: {
-          font: {
-            size: 11,
-          },
-        },
-      },
-    },
-  }
+  const { security_metrics, connection_stats, blacklist_whitelist, user_activity, network_stats } = data
 
   return (
     <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full max-w-full large-laptop:max-w-7xl mx-auto">
@@ -469,116 +126,28 @@ const Analytics = () => {
       <div className="grid grid-cols-1 normal-laptop:grid-cols-2 gap-4 small-laptop:gap-5 normal-laptop:gap-6 mb-6 small-laptop:mb-8">
         <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
           <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800" data-tour="analytics-risk-chart">Risk Level Distribution</h2>
-          {riskLevelData.length > 0 ? (
-            <div className="h-[250px] small-laptop:h-[300px]">
-              <Pie data={riskLevelChartData} options={pieChartOptions} />
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-[250px] small-laptop:h-[300px] text-gray-500">
-              No risk data available.
-            </div>
-          )}
+          <RiskLevelChart securityMetrics={security_metrics} />
         </div>
 
         <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
           <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800" data-tour="analytics-connection-chart">Connection Status</h2>
-          {connectionStatusData.length > 0 ? (
-            <div className="h-[250px] small-laptop:h-[300px]">
-              <Pie data={connectionStatusChartData} options={pieChartOptions} />
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-[250px] small-laptop:h-[300px] text-gray-500">
-              No connection data available.
-            </div>
-          )}
+          <ConnectionStatusChart securityMetrics={security_metrics} />
         </div>
       </div>
 
       {/* Threat Type Distribution & Channel Usage */}
       <div className="grid grid-cols-1 normal-laptop:grid-cols-2 gap-4 small-laptop:gap-5 normal-laptop:gap-6 mb-6 small-laptop:mb-8">
         <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
-          <div className="flex flex-col small-laptop:flex-row justify-between items-start small-laptop:items-center mb-3 small-laptop:mb-4 gap-2">
-            <h2 className="text-lg small-laptop:text-xl font-bold text-gray-800" data-tour="analytics-threat-chart">Threat Type Distribution</h2>
-            <div className="flex flex-wrap gap-1 small-laptop:gap-2">
-              <Button
-                onClick={() => setThreatDateFilter('day')}
-                variant={threatDateFilter === 'day' ? 'primary' : 'outline'}
-                className={`!px-2 small-laptop:!px-3 !py-1 !rounded !text-xs !font-medium !gap-0 !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto ${
-                  threatDateFilter === 'day'
-                    ? '!bg-blue-500 !text-white'
-                    : '!bg-gray-100 !text-gray-700 hover:!bg-gray-200'
-                }`}
-              >
-                Day
-              </Button>
-              <Button
-                onClick={() => setThreatDateFilter('week')}
-                variant={threatDateFilter === 'week' ? 'primary' : 'outline'}
-                className={`!px-2 small-laptop:!px-3 !py-1 !rounded !text-xs !font-medium !gap-0 !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto ${
-                  threatDateFilter === 'week'
-                    ? '!bg-blue-500 !text-white'
-                    : '!bg-gray-100 !text-gray-700 hover:!bg-gray-200'
-                }`}
-              >
-                Week
-              </Button>
-              <Button
-                onClick={() => setThreatDateFilter('month')}
-                variant={threatDateFilter === 'month' ? 'primary' : 'outline'}
-                className={`!px-2 small-laptop:!px-3 !py-1 !rounded !text-xs !font-medium !gap-0 !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto ${
-                  threatDateFilter === 'month'
-                    ? '!bg-blue-500 !text-white'
-                    : '!bg-gray-100 !text-gray-700 hover:!bg-gray-200'
-                }`}
-              >
-                Month
-              </Button>
-              <Button
-                onClick={() => setThreatDateFilter('year')}
-                variant={threatDateFilter === 'year' ? 'primary' : 'outline'}
-                className={`!px-2 small-laptop:!px-3 !py-1 !rounded !text-xs !font-medium !gap-0 !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto ${
-                  threatDateFilter === 'year'
-                    ? '!bg-blue-500 !text-white'
-                    : '!bg-gray-100 !text-gray-700 hover:!bg-gray-200'
-                }`}
-              >
-                Year
-              </Button>
-              <Button
-                onClick={() => setThreatDateFilter('all')}
-                variant={threatDateFilter === 'all' ? 'primary' : 'outline'}
-                className={`!px-2 small-laptop:!px-3 !py-1 !rounded !text-xs !font-medium !gap-0 !p-0 !w-auto !normal-laptop:w-auto !large-laptop:w-auto !wide-screen:w-auto !small-laptop:w-auto ${
-                  threatDateFilter === 'all'
-                    ? '!bg-blue-500 !text-white'
-                    : '!bg-gray-100 !text-gray-700 hover:!bg-gray-200'
-                }`}
-              >
-                All
-              </Button>
-            </div>
-          </div>
-          {threatTypeData.length > 0 ? (
-            <div className="h-[250px] small-laptop:h-[300px]">
-              <Pie data={threatTypeChartData} options={pieChartOptions} />
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-[250px] small-laptop:h-[300px] text-gray-500">
-              No threat type data available.
-            </div>
-          )}
+          <ThreatTypeChart 
+            threatAnalytics={data.threat_analytics} 
+            threatDateFilter={threatDateFilter}
+            onFilterChange={setThreatDateFilter}
+          />
         </div>
 
         <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
           <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800" data-tour="analytics-channel-chart">Channel Usage</h2>
-          {(channelData.some(v => v > 0)) ? (
-            <div className="h-[250px] small-laptop:h-[300px]">
-              <Bar data={channelUsageChartData} options={barChartOptions} />
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-[250px] small-laptop:h-[300px] text-gray-500">
-              No channel usage data available.
-            </div>
-          )}
+          <ChannelUsageChart threatAnalytics={data.threat_analytics} />
         </div>
       </div>
 
@@ -586,80 +155,7 @@ const Analytics = () => {
       <div className="grid grid-cols-1 normal-laptop:grid-cols-2 gap-4 small-laptop:gap-5 normal-laptop:gap-6 mb-6 small-laptop:mb-8">
         <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
           <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800" data-tour="analytics-list-stats">Blacklist vs Whitelist</h2>
-          <div className="h-[200px] small-laptop:h-[250px] mb-3 small-laptop:mb-4">
-            <Bar data={listComparisonChartData} options={barChartOptions} />
-          </div>
-          <div className="mt-4 space-y-4">
-            {/* Time-based filters */}
-            <div className="grid grid-cols-3 gap-2 text-xs">
-              <div className="text-center p-2 bg-gray-50 rounded">
-                <p className="font-semibold text-gray-700">Today</p>
-              </div>
-              <div className="text-center p-2 bg-gray-50 rounded">
-                <p className="font-semibold text-gray-700">This Week</p>
-              </div>
-              <div className="text-center p-2 bg-gray-50 rounded">
-                <p className="font-semibold text-gray-700">This Month</p>
-              </div>
-            </div>
-            {/* Blacklist Stats */}
-            <div className="border-t pt-3">
-              <p className="text-sm font-semibold text-red-700 mb-2">Blacklist</p>
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="text-center">
-                  <p className="text-lg font-bold text-red-600">
-                    +{blacklist_whitelist.blacklist_additions_today} / -{blacklist_whitelist.blacklist_removals_today}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-red-600">
-                    +{blacklist_whitelist.blacklist_additions_week} / -{blacklist_whitelist.blacklist_removals_week}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-red-600">
-                    +{blacklist_whitelist.blacklist_additions_month} / -{blacklist_whitelist.blacklist_removals_month}
-                  </p>
-                </div>
-              </div>
-            </div>
-            {/* Whitelist Stats */}
-            <div className="border-t pt-3">
-              <p className="text-sm font-semibold text-green-700 mb-2">Whitelist</p>
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="text-center">
-                  <p className="text-lg font-bold text-green-600">
-                    +{blacklist_whitelist.whitelist_additions_today} / -{blacklist_whitelist.whitelist_removals_today}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-green-600">
-                    +{blacklist_whitelist.whitelist_additions_week} / -{blacklist_whitelist.whitelist_removals_week}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-green-600">
-                    +{blacklist_whitelist.whitelist_additions_month} / -{blacklist_whitelist.whitelist_removals_month}
-                  </p>
-                </div>
-              </div>
-            </div>
-            {/* Total Stats */}
-            <div className="border-t pt-3 grid grid-cols-1 small-laptop:grid-cols-2 gap-3 small-laptop:gap-4">
-              <div className="text-center">
-                <p className="text-xl small-laptop:text-2xl font-bold text-red-600">{blacklist_whitelist.blacklist_additions}</p>
-                <p className="text-xs small-laptop:text-sm text-gray-600">Total Blacklist Additions</p>
-                <p className="text-xl small-laptop:text-2xl font-bold text-red-600 mt-2">{blacklist_whitelist.blacklist_removals}</p>
-                <p className="text-xs small-laptop:text-sm text-gray-600">Total Blacklist Removals</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xl small-laptop:text-2xl font-bold text-green-600">{blacklist_whitelist.whitelist_additions}</p>
-                <p className="text-xs small-laptop:text-sm text-gray-600">Total Whitelist Additions</p>
-                <p className="text-xl small-laptop:text-2xl font-bold text-green-600 mt-2">{blacklist_whitelist.whitelist_removals}</p>
-                <p className="text-xs small-laptop:text-sm text-gray-600">Total Whitelist Removals</p>
-              </div>
-            </div>
-          </div>
+          <BlacklistWhitelistChart blacklistWhitelist={blacklist_whitelist} />
         </div>
 
         <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
@@ -755,6 +251,8 @@ const Analytics = () => {
       </div>
     </div>
   )
-}
+})
+
+Analytics.displayName = 'Analytics'
 
 export default Analytics

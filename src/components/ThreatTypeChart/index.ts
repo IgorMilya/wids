@@ -1,0 +1,2 @@
+export { ThreatTypeChart } from './ThreatTypeChart'
+
