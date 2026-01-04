@@ -1,4 +1,4 @@
-import React from 'react'
+import {useState, useRef, useEffect, memo} from 'react'
 import { useGetAnalyticsQuery } from 'store/api'
 import {
   Chart as ChartJS,
@@ -14,7 +14,6 @@ import {
   Filler,
 } from 'chart.js'
 
-// Register Chart.js components
 ChartJS.register(
   ArcElement,
   Tooltip,
@@ -28,41 +27,29 @@ ChartJS.register(
   Filler
 )
 
-import { RiskLevelChart } from 'components/RiskLevelChart'
-import { ConnectionStatusChart } from 'components/ConnectionStatusChart'
-import { ThreatTypeChart } from 'components/ThreatTypeChart'
-import { ChannelUsageChart } from 'components/ChannelUsageChart'
-import { BlacklistWhitelistChart } from 'components/BlacklistWhitelistChart'
+import { RiskLevelChart, ConnectionStatusChart, ThreatTypeChart, ChannelUsageChart, BlacklistWhitelistChart } from 'components'
 
-const Analytics = React.memo(() => {
-  const [threatDateFilter, setThreatDateFilter] = React.useState<'day' | 'week' | 'month' | 'year' | 'all'>('all')
+
+const Analytics = memo(() => {
+  const [threatDateFilter, setThreatDateFilter] = useState<'day' | 'week' | 'month' | 'year' | 'all'>('all')
   
-  // Use a ref to track if we've loaded data at least once
-  const hasLoadedDataRef = React.useRef(false)
+  const hasLoadedDataRef = useRef(false)
   
-  const { data, isLoading, isError, isFetching } = useGetAnalyticsQuery(
+  const { data, isLoading, isError } = useGetAnalyticsQuery(
     { threatDateFilter },
     {
-      // Only refetch when threatDateFilter argument changes (creates different query key)
-      // Cache invalidation from mutations will still trigger automatic refetch
       refetchOnMountOrArgChange: true,
-      // Don't refetch on window focus - use cached data
       refetchOnFocus: false,
-      // Don't refetch on reconnect - use cached data
       refetchOnReconnect: false,
     }
   )
   
-  // Track if we've loaded data
-  React.useEffect(() => {
+  useEffect(() => {
     if (data) {
       hasLoadedDataRef.current = true
     }
   }, [data])
 
-  // Show cached data immediately if available, even if refetching in background
-  // Only show loading spinner on initial load when there's no cached data
-  // If we've loaded data before, show it even if isLoading is true (background refetch)
   if (isLoading && !data && !hasLoadedDataRef.current) {
     return (
       <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full flex items-center justify-center min-h-screen">
@@ -79,8 +66,6 @@ const Analytics = React.memo(() => {
     )
   }
 
-  // If we have data (even if stale), show it while refetching in background
-  // This ensures instant display when navigating back to the page
   if (!data) {
     return null
   }
@@ -91,7 +76,6 @@ const Analytics = React.memo(() => {
     <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full max-w-full large-laptop:max-w-7xl mx-auto">
       <h1 className="text-xl small-laptop:text-2xl normal-laptop:text-3xl font-bold mb-4 small-laptop:mb-5 normal-laptop:mb-6 text-gray-800">Analytics Dashboard</h1>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 small-laptop:grid-cols-2 normal-laptop:grid-cols-2 large-laptop:grid-cols-4 gap-3 small-laptop:gap-4 mb-6 small-laptop:mb-8" data-tour="analytics-summary">
         <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md border-l-4 border-blue-500">
           <h3 className="text-gray-600 text-xs small-laptop:text-sm font-medium mb-1 small-laptop:mb-2">Total Scans</h3>
@@ -122,7 +106,6 @@ const Analytics = React.memo(() => {
         </div>
       </div>
 
-      {/* Security Metrics */}
       <div className="grid grid-cols-1 normal-laptop:grid-cols-2 gap-4 small-laptop:gap-5 normal-laptop:gap-6 mb-6 small-laptop:mb-8">
         <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
           <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800" data-tour="analytics-risk-chart">Risk Level Distribution</h2>
@@ -135,7 +118,6 @@ const Analytics = React.memo(() => {
         </div>
       </div>
 
-      {/* Threat Type Distribution & Channel Usage */}
       <div className="grid grid-cols-1 normal-laptop:grid-cols-2 gap-4 small-laptop:gap-5 normal-laptop:gap-6 mb-6 small-laptop:mb-8">
         <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
           <ThreatTypeChart 
@@ -151,7 +133,6 @@ const Analytics = React.memo(() => {
         </div>
       </div>
 
-      {/* Blacklist/Whitelist Stats */}
       <div className="grid grid-cols-1 normal-laptop:grid-cols-2 gap-4 small-laptop:gap-5 normal-laptop:gap-6 mb-6 small-laptop:mb-8">
         <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
           <h2 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4 text-gray-800" data-tour="analytics-list-stats">Blacklist vs Whitelist</h2>
@@ -181,7 +162,6 @@ const Analytics = React.memo(() => {
         </div>
       </div>
 
-      {/* Detailed Stats Grid */}
       <div className="grid grid-cols-1 small-laptop:grid-cols-2 normal-laptop:grid-cols-3 gap-3 small-laptop:gap-4">
         <div className="bg-gradient-to-br from-red-50 to-red-100 p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md">
           <h3 className="text-base small-laptop:text-lg font-semibold text-red-800 mb-2">Security Metrics</h3>

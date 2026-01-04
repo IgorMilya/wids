@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useGetLogsQuery, useLazyExportLogsQuery } from 'store/api'
 import { Button, Table } from 'UI'
-import TableLogs from './table-logs/TableLogs'
+import {TableLogs} from './table-logs'
 import { writeTextFile } from '@tauri-apps/plugin-fs'
 import { save } from '@tauri-apps/plugin-dialog'
 import { LogEntryType } from 'types'
 
+//TODO:
 const Logs = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [searchAction, setSearchAction] = useState('')
@@ -35,14 +36,12 @@ const Logs = () => {
     sort_direction: sortConfig?.direction || undefined,
   })
 
-  // Lazy query for export - only fetch when export button is clicked
   const [triggerExport, { data: exportData, isLoading: isExportLoading }] = useLazyExportLogsQuery()
 
   const logs = data?.logs ?? []
   const total = data?.total ?? 0
   const totalPages = Math.ceil(total / limit)
 
-  // Sorting is now done server-side, so we just use logs directly
   const sortedData = logs
 
 
@@ -53,37 +52,26 @@ const Logs = () => {
       }
       return { key: column, direction: 'asc' }
     })
-    // Reset to page 1 when sorting changes
     setPage(1)
   }
 
-  // Export all logs based on current filters
   useEffect(() => {
-    // Only process export if we're actively exporting and have data
     if (isExporting && exportData && !isExportLoading) {
       const handleExport = async () => {
         try {
-          // CSV header
           const headers = ['SSID', 'BSSID', 'Action', 'Timestamp', 'Details'];
 
-          // Handle both array response (from backend) and object response (if backend changes)
-          // Backend returns array directly, not wrapped in { total, logs }
           const exportLogs: LogEntryType[] = Array.isArray(exportData) 
             ? exportData 
             : (exportData && typeof exportData === 'object' && 'logs' in exportData ? (exportData as { logs: LogEntryType[] }).logs : []);
           
-          // Check if exportData has logs array
-          // Only show alert if we have no logs AND we're sure the query completed
           if (!exportLogs || exportLogs.length === 0) {
             console.log('Export data:', exportData);
             console.log('Current view - total:', total, 'logs:', logs.length);
             
-            // Only show alert if there are truly no logs in the current view either
-            // This prevents false alerts when exportData is stale or from a different filter
             if (total === 0) {
               alert('No logs found matching the current filters');
             } else {
-              // If we have logs in view but export returned empty, log detailed info for debugging
               console.warn('Export returned no logs but current view shows logs.', {
                 exportDataIsArray: Array.isArray(exportData),
                 exportLogsCount: exportLogs.length,
@@ -114,7 +102,6 @@ const Logs = () => {
               .map(row => row.map((field: string) => `"${String(field).replace(/"/g, '""')}"`).join(','))
               .join('\r\n');
 
-          // Generate filename based on filters
           const filterParts: string[] = [];
           if (debouncedSearchTerm) filterParts.push(`ssid_${debouncedSearchTerm.replace(/[^a-zA-Z0-9]/g, '_')}`);
           if (searchAction) filterParts.push(`action_${searchAction.replace(/[^a-zA-Z0-9]/g, '_')}`);
@@ -123,11 +110,9 @@ const Logs = () => {
           const filterSuffix = filterParts.length > 0 ? `_${filterParts.join('_')}` : '_all';
           const filename = `logs${filterSuffix}_${new Date().toISOString().split('T')[0]}.csv`;
 
-          // Check if we're in Tauri environment
           const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
           if (isTauri) {
-            // Use Tauri file dialog to save file
             try {
               const filePath = await save({
                 defaultPath: filename,
@@ -141,7 +126,6 @@ const Logs = () => {
                 await writeTextFile(filePath, csvContent);
                 alert('Logs exported successfully!');
               } else {
-                // User cancelled the dialog
                 setIsExporting(false);
                 return;
               }
@@ -152,7 +136,6 @@ const Logs = () => {
               return;
             }
           } else {
-            // Fallback to browser download for web environment
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -181,8 +164,6 @@ const Logs = () => {
   const exportToCSV = async () => {
     setIsExporting(true);
 
-    // Use the same filters as the current view query to ensure consistency
-    // Use debouncedSearchTerm to match what's currently displayed
     const exportParams: {
       ssid?: string
       action?: string
@@ -215,7 +196,6 @@ const Logs = () => {
     console.log('Exporting with params:', exportParams);
     console.log('Current view - total logs:', total, 'visible logs:', logs.length);
     
-    // Fetch all logs based on current filters
     await triggerExport(Object.keys(exportParams).length > 0 ? exportParams : undefined).unwrap().catch((error) => {
       console.error('Export failed:', error);
       alert(`Failed to export logs: ${error?.data?.error || error?.message || 'Unknown error'}`);
@@ -297,13 +277,6 @@ const Logs = () => {
       </Table>
       {!!logs.length &&
         <div className="flex gap-2 mt-3 small-laptop:mt-4 items-center justify-center small-laptop:justify-start text-sm small-laptop:text-base">
-          {/* <button
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-            className="px-3 py-1 rounded border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-          >
-            Prev
-          </button> */}
           <div>
             <Button
               onClick={() => setPage(page - 1)}

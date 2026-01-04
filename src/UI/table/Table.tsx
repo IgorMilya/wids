@@ -1,4 +1,4 @@
-import React, { FC, PropsWithChildren } from 'react'
+import { FC, PropsWithChildren } from 'react'
 import { TableHead } from './table-head'
 
 interface TableProps extends PropsWithChildren {
@@ -8,7 +8,7 @@ interface TableProps extends PropsWithChildren {
   minH?: string;
   onSort?: (column: string) => void;
   sortConfig?: { key: string; direction: 'asc' | 'desc' } | null;
-  columnWidths?: string[]; // Array of width classes for each column
+  columnWidths?: string[]; 
   isLoading?: boolean;
 }
 

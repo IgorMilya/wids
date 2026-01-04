@@ -10,7 +10,6 @@ import {
   Logs,
   ResetPassword,
   Profile,
-  // MonitoringSettings,
 } from 'pages'
 import { ProtectedRoute } from './ProtectedRoute'
 import { ROUTES } from './routes.utils'
@@ -18,12 +17,10 @@ import { ROUTES } from './routes.utils'
 export const AppRouter = () => {
   return (
     <Routes>
-      {/* Public routes */}
       <Route path={ROUTES.LOGIN} element={<Login />} />
       <Route path={ROUTES.REGISTRATION} element={<Registration />} />
       <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
 
-      {/* Protected routes */}
       <Route element={<ProtectedRoute />}>
         <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.SCANNER} />} />
         <Route path={ROUTES.HOME} element={<HomeLayout />}>
@@ -33,7 +30,6 @@ export const AppRouter = () => {
           <Route path={ROUTES.LOGS} element={<Logs />} />
           <Route path={ROUTES.PROFILE} element={<Profile />} />
           <Route path={ROUTES.ANALYTICS} element={<Analytics />} />
-          {/* <Route path={ROUTES.MONITORING_SETTINGS} element={<MonitoringSettings />} /> */}
         </Route>
       </Route>
     </Routes>

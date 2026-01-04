@@ -3,10 +3,6 @@ import { setIsTempUser, setDeviceId, setCachedNetworks } from 'store/reducers/us
 import { getDeviceId } from './deviceId'
 import { loadNetworkCache } from './cacheManager'
 
-/**
- * Enable guest (temp user) mode
- * Loads cached networks for the device and enables temp user access
- */
 export const enableGuestMode = async (): Promise<void> => {
   try {
     const deviceId = await getDeviceId()
@@ -27,7 +23,6 @@ export const enableGuestMode = async (): Promise<void> => {
         blacklistCount: cache.blacklist.length,
       })
     } else {
-      // No cache available, but still enable guest mode for scanning
       store.dispatch(setDeviceId(deviceId))
       store.dispatch(setCachedNetworks({
         whitelist: [],

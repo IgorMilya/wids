@@ -1,5 +1,6 @@
 import { api } from './api'
 
+//TODO
 export interface AnalyticsResponse {
   security_metrics: SecurityMetrics
   connection_stats: ConnectionStats
@@ -81,7 +82,6 @@ export interface HourlyActivity {
   activity_count: number
 }
 
-// New threat analytics interfaces
 export interface ThreatAnalytics {
   threats_over_time: ThreatsOverTime
   threat_type_distribution: ThreatTypeDistribution
@@ -148,8 +148,7 @@ export const analyticsApi = api.injectEndpoints({
         return `/analytics${queryString ? `?${queryString}` : ''}`
       },
       providesTags: ['Analytics'],
-      // Cache data for 5 minutes - only refetch if data is older than 5 minutes
-      keepUnusedDataFor: 300, // 5 minutes in seconds
+      keepUnusedDataFor: 300, 
     }),
   }),
 })

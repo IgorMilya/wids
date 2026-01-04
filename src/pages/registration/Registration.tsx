@@ -9,7 +9,7 @@ import {
 import { useDispatch } from 'react-redux'
 import { loginUser } from 'store/reducers/user.slice'
 import { ROUTES } from 'routes/routes.utils'
-import { enableGuestMode } from 'utils/guestMode'
+import { enableGuestMode } from 'utils'
 import ReCAPTCHA from 'react-google-recaptcha'
 import { Input, Button } from 'UI'
 import {
@@ -19,6 +19,7 @@ import {
   verifyValidationSchema,
 } from './RegistrationForm.utils'
 
+//TODO:
 interface RegisterFormValues {
   email: string
   password: string
@@ -67,14 +68,13 @@ export const Registration = () => {
 
       recaptchaRef.current?.reset()
       setCaptchaToken(null)
-      setEmail(values.email) // Store email for verification step
+      setEmail(values.email) 
 
       setStep('verify')
       setInfo('Verification code sent to your email.')
     } catch (err: any) {
       console.error(err)
       setError(err?.data?.error || 'Registration failed. Please try again.')
-      // Keep form values - Formik preserves them automatically
     }
   }
 
@@ -96,16 +96,13 @@ export const Registration = () => {
         })
       )
 
-      // Clear any existing tour state for new registration
       localStorage.removeItem('wisp_tour_started')
       localStorage.removeItem('wisp_tour_completed')
       
-      // Navigate to Scanner where tour will start
       navigate(ROUTES.SCANNER)
     } catch (err: any) {
       console.error(err)
       setError(err?.data?.error || 'Verification failed. Please try again.')
-      // Keep form values - Formik preserves them automatically
     }
   }
 
@@ -128,7 +125,6 @@ export const Registration = () => {
       navigate(ROUTES.SCANNER)
     } catch (error) {
       console.error('Failed to enable guest mode:', error)
-      // Still navigate to scanner even if cache fails
       navigate(ROUTES.SCANNER)
     }
   }

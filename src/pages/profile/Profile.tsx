@@ -18,6 +18,7 @@ import {
   usernameChangeValidationSchema,
 } from './ProfileForm.utils'
 
+//TODO:
 type TabType = 'network' | 'username' | 'password'
 
 const Profile: FC = () => {
@@ -29,10 +30,8 @@ const Profile: FC = () => {
   const user = useSelector((state: RootState) => state.user.user)
   const dispatch = useDispatch()
 
-  // Tab state
   const [activeTab, setActiveTab] = useState<TabType>('network')
 
-  // Profile settings state
   const [profilingPreference, setProfilingPreference] = useState('balanced')
   const [speedNetworkPreference, setSpeedNetworkPreference] = useState('medium')
   const [confidenceLevel, setConfidenceLevel] = useState('medium')
@@ -41,63 +40,48 @@ const Profile: FC = () => {
   const [minSignalStrength, setMinSignalStrength] = useState(50)
   const [maxRiskLevel, setMaxRiskLevel] = useState('M')
 
-  // Success state
   const [usernameChanged, setUsernameChanged] = useState(false)
   const [passwordChanged, setPasswordChanged] = useState(false)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
   
-  // Track when user manually changes values (not from database load)
   const [userChangedSpeed, setUserChangedSpeed] = useState(false)
   const [userChangedConfidence, setUserChangedConfidence] = useState(false)
   const [userChangedProfiling, setUserChangedProfiling] = useState(false)
   const [userChangedProfileType, setUserChangedProfileType] = useState(false)
   
-  // Track previous values for change detection
   const [previousProfile, setPreviousProfile] = useState<typeof profile | null>(null)
   const [previousUsername, setPreviousUsername] = useState<string | null>(null)
 
   useEffect(() => {
     if (profile) {
-      // Load stored values exactly as they are in the database (including 0, null, etc.)
       setProfilingPreference(profile.profiling_preference)
       setSpeedNetworkPreference(profile.speed_network_preference)
       setConfidenceLevel(profile.confidence_level)
       setProfileType(profile.profile_type)
-      setPreferredAuth([...(profile.preferred_authentication || ['WPA3', 'WPA2'])]) // Create a copy to avoid read-only issues
+      setPreferredAuth([...(profile.preferred_authentication || ['WPA3', 'WPA2'])]) 
       
-      // Use nullish coalescing to preserve 0 values (only default if null/undefined)
       setMinSignalStrength(profile.min_signal_strength ?? 50)
       setMaxRiskLevel(profile.max_risk_level ?? 'M')
       
-      // Store previous profile for change detection (only on initial load)
       if (isInitialLoad) {
-        // Initial load - set previous profile to current state for comparison
-        // Create a deep copy to avoid read-only issues with RTK Query response
         setPreviousProfile({
           ...profile,
           preferred_authentication: [...(profile.preferred_authentication || [])],
         })
         setIsInitialLoad(false)
-        // Reset user change flags on initial load
         setUserChangedSpeed(false)
         setUserChangedConfidence(false)
         setUserChangedProfiling(false)
         setUserChangedProfileType(false)
       }
-      // If not initial load and previousProfile exists, keep it (user is editing)
-      // previousProfile will be updated after successful save
     }
     if (user?.username) {
-      // Store previous username for change detection
       if (!previousUsername) {
         setPreviousUsername(user.username)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, user])
 
-  // Auto-adjust min_signal_strength based on speed_network_preference
-  // Only when user manually changes speed preference, not on initial load
   useEffect(() => {
     if (isInitialLoad || !profile || !userChangedSpeed) return
     
@@ -118,59 +102,41 @@ const Profile: FC = () => {
         }
         break
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [speedNetworkPreference, isInitialLoad, profile, userChangedSpeed])
 
-  // Auto-adjust max_risk_level based on confidence_level
-  // Only when user manually changes confidence level, not on initial load
   useEffect(() => {
     if (isInitialLoad || !profile || !userChangedConfidence) return
     
-    // Force immediate update based on current confidence level
     switch (confidenceLevel) {
       case 'high':
-        // High confidence = stricter: only Low or Medium risk allowed
-        // If current risk is High or Critical, set to Medium
         if (maxRiskLevel === 'H' || maxRiskLevel === 'C') {
           setMaxRiskLevel('M')
         }
         break
       case 'medium':
-        // Medium confidence: allow up to High risk, but not Critical
-        // If current risk is Critical, set to High
         if (maxRiskLevel === 'C') {
           setMaxRiskLevel('H')
         }
         break
       case 'low':
-        // Low confidence allows all risk levels - no auto-adjust needed
         break
     }
   }, [confidenceLevel, maxRiskLevel, isInitialLoad, profile, userChangedConfidence])
 
-  // Auto-adjust settings based on profiling_preference
-  // Only when user manually changes profiling preference, not on initial load
   useEffect(() => {
     if (isInitialLoad || !profile || !userChangedProfiling) return
     
     switch (profilingPreference) {
       case 'speed':
-        // Speed priority: set high speed preference and allow higher risk
         setSpeedNetworkPreference('high')
-        // Allow higher risk levels for speed priority (up to High, not Critical)
         if (maxRiskLevel === 'L' || maxRiskLevel === 'M' || maxRiskLevel === 'C') {
           setMaxRiskLevel('H')
         }
-        // Auto-set minimum signal strength to high if not already set high enough
-        // Set this directly here since we're auto-changing speed
         if (minSignalStrength < 70) {
           setMinSignalStrength(70)
         }
         break
       case 'security':
-        // Security priority: focus on secure networks only
-        // Don't change Speed Network Preference - leave it as user set
-        // Set Preferred Authentication Types to only WPA3 and WPA2 (most secure)
         const hasOnlySecureAuth = preferredAuth.length === 2 && 
           preferredAuth.includes('WPA3') && 
           preferredAuth.includes('WPA2') &&
@@ -178,49 +144,35 @@ const Profile: FC = () => {
         if (!hasOnlySecureAuth) {
           setPreferredAuth(['WPA3', 'WPA2'])
         }
-        // Set Maximum Risk Level to Medium (allows Low and Medium only)
         if (maxRiskLevel === 'H' || maxRiskLevel === 'C') {
           setMaxRiskLevel('M')
         }
-        // Don't touch minimum signal strength - not relevant for security
         break
       case 'balanced':
-        // Balanced: set medium speed preference and medium risk
         setSpeedNetworkPreference('medium')
-        // Allow up to High risk but not Critical for balanced
         if (maxRiskLevel === 'C') {
           setMaxRiskLevel('H')
         }
-        // Auto-set minimum signal strength to medium if needed
-        // Set this directly here since we're auto-changing speed
         if (minSignalStrength < 40 || minSignalStrength > 60) {
           setMinSignalStrength(50)
         }
         break
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profilingPreference, isInitialLoad, profile, userChangedProfiling])
 
-  // Auto-adjust settings based on profile_type
-  // Only when user manually changes profile type, not on initial load
   useEffect(() => {
     if (isInitialLoad || !profile || !userChangedProfileType) return
     
     if (profileType === 'work') {
-      // Work: stricter security - enforce Low/Medium risk only
-      // If current risk is High or Critical, set to Medium
       if (maxRiskLevel === 'H' || maxRiskLevel === 'C') {
         setMaxRiskLevel('M')
       }
       
-      // Only allow secure authentication for work - enforce WPA3/WPA2 only
       const hasUnsecureAuth = preferredAuth.some(auth => auth !== 'WPA3' && auth !== 'WPA2')
       const hasSecureAuth = preferredAuth.includes('WPA3') || preferredAuth.includes('WPA2')
       
-      // If there's unsecure auth (like WPA or Open) or no secure auth, replace with only secure
       if (hasUnsecureAuth || !hasSecureAuth) {
         const newAuth = preferredAuth.filter(auth => auth === 'WPA3' || auth === 'WPA2')
-        // Ensure at least WPA3 or WPA2 is present
         if (newAuth.length === 0) {
           setPreferredAuth(['WPA3', 'WPA2'])
         } else {
@@ -231,18 +183,14 @@ const Profile: FC = () => {
   }, [profileType, maxRiskLevel, preferredAuth, isInitialLoad, profile, userChangedProfileType])
 
   const handleAuthToggle = (auth: string) => {
-    // In security mode or work mode: only allow WPA3 and WPA2, and prevent unchecking them
     const isSecurityMode = profilingPreference === 'security'
     const isWorkMode = profileType === 'work'
     
     if (isSecurityMode || isWorkMode) {
-      // Prevent toggling non-secure auth types
       if (auth !== 'WPA3' && auth !== 'WPA2') {
         return
       }
-      // Prevent unchecking secure auth types (must have at least one)
       if (preferredAuth.includes(auth) && preferredAuth.filter(a => a === 'WPA3' || a === 'WPA2').length <= 1) {
-        return // Don't allow unchecking if it's the last secure auth type
       }
     }
     
@@ -255,7 +203,6 @@ const Profile: FC = () => {
 
   const handleSaveProfile = async () => {
     try {
-      // Detect what changed by comparing with previous profile
       const changedFields: string[] = []
       
       if (previousProfile) {
@@ -335,25 +282,22 @@ const Profile: FC = () => {
         max_risk_level: maxRiskLevel,
       }).unwrap()
       
-      // Update previous profile after successful save to reflect new values
       setPreviousProfile({
         ...profile!,
         profiling_preference: profilingPreference,
         speed_network_preference: speedNetworkPreference,
         confidence_level: confidenceLevel,
         profile_type: profileType,
-        preferred_authentication: [...preferredAuth], // Create a copy to avoid read-only issues
+        preferred_authentication: [...preferredAuth], 
         min_signal_strength: minSignalStrength,
         max_risk_level: maxRiskLevel,
       })
       
-      // Reset user change flags after successful save
       setUserChangedSpeed(false)
       setUserChangedConfidence(false)
       setUserChangedProfiling(false)
       setUserChangedProfileType(false)
       
-      // Log summary if multiple fields changed
       if (changedFields.length > 1) {
         addLog({
           network_ssid: '-',
@@ -361,7 +305,6 @@ const Profile: FC = () => {
           details: `Profile updated: ${changedFields.length} settings changed`,
         }).catch(console.error)
       } else if (changedFields.length === 0) {
-        // No changes detected (user clicked save without changes)
         addLog({
           network_ssid: '-',
           action: 'PROFILE_SAVE_ATTEMPTED',
@@ -395,7 +338,6 @@ const Profile: FC = () => {
     try {
       const response = await changeUsername({ username: newUsername }).unwrap()
       
-      // Update tokens with new JWT that contains updated username
       if (response.token && response.refresh_token) {
         dispatch(setTokens({
           token: response.token,
@@ -403,13 +345,11 @@ const Profile: FC = () => {
         }))
       }
       
-      // Update username in Redux store
       dispatch(updateUsername(response.username))
       setPreviousUsername(newUsername)
       setUsernameChanged(true)
       setTimeout(() => setUsernameChanged(false), 3000)
       
-      // Log username change
       addLog({
         network_ssid: '-',
         action: 'USERNAME_CHANGED',
@@ -438,7 +378,6 @@ const Profile: FC = () => {
         new_password: values.newPassword,
       }).unwrap()
       
-      // Log successful password change (don't log the actual password)
       addLog({
         network_ssid: '-',
         action: 'PASSWORD_CHANGED',
@@ -478,7 +417,6 @@ const Profile: FC = () => {
     <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full max-w-full large-laptop:max-w-4xl">
       <h1 className="font-bold text-lg small-laptop:text-xl normal-laptop:text-[20px] mb-4 small-laptop:mb-5 normal-laptop:mb-6" data-tour="profile-title">Profile Settings</h1>
 
-      {/* Tab Navigation */}
       <div className="border-b border-gray-200 mb-4 small-laptop:mb-5 normal-laptop:mb-6 overflow-x-auto">
         <nav className="flex space-x-4 small-laptop:space-x-6 normal-laptop:space-x-8 min-w-max" aria-label="Tabs">
           {tabs.map((tab) => (
@@ -498,9 +436,7 @@ const Profile: FC = () => {
         </nav>
       </div>
 
-      {/* Tab Content */}
       <div className="bg-white rounded-lg shadow p-4 small-laptop:p-5 normal-laptop:p-6">
-        {/* Network Profiling Preferences Tab */}
         {activeTab === 'network' && (
           <div>
             <h2 className="text-base small-laptop:text-lg font-semibold mb-3 small-laptop:mb-4">Network Profiling Preferences</h2>
@@ -646,29 +582,22 @@ const Profile: FC = () => {
               <Button 
                 variant="outline" 
                 onClick={() => {
-                  // Reset all filters to show all networks
-                  // Set values that allow maximum flexibility
                   setProfileType('personal')
-                  setConfidenceLevel('low') // Low confidence allows all risk levels including Critical
+                  setConfidenceLevel('low')
                   setPreferredAuth(['WPA3', 'WPA2', 'WPA', 'Open'])
                   setSpeedNetworkPreference('medium')
                   setProfilingPreference('balanced')
                   
-                  // Mark all as user changed to trigger useEffects
                   setUserChangedProfiling(true)
                   setUserChangedSpeed(true)
                   setUserChangedConfidence(true)
                   setUserChangedProfileType(true)
                   
-                  // Set final values after useEffects have processed
-                  // Use requestAnimationFrame for better timing
                   requestAnimationFrame(() => {
                     setTimeout(() => {
-                      // Override any changes from useEffects
                       setMinSignalStrength(0)
                       setMaxRiskLevel('C')
                       setPreferredAuth(['WPA3', 'WPA2', 'WPA', 'Open'])
-                      // Ensure values stay set with one more frame
                       requestAnimationFrame(() => {
                         setMinSignalStrength(0)
                         setMaxRiskLevel('C')
@@ -686,7 +615,6 @@ const Profile: FC = () => {
           </div>
         )}
 
-        {/* Change Username Tab */}
         {activeTab === 'username' && (
           <div>
             <h2 className="text-base small-laptop:text-lg font-semibold mb-3 small-laptop:mb-4">Change Username</h2>
@@ -720,7 +648,6 @@ const Profile: FC = () => {
           </div>
         )}
 
-        {/* Change Password Tab */}
         {activeTab === 'password' && (
           <div>
             <h2 className="text-base small-laptop:text-lg font-semibold mb-3 small-laptop:mb-4">Change Password</h2>

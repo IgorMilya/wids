@@ -6,27 +6,25 @@ import { TableBlacklist } from './table-blacklist'
 import { useEffect, useState } from 'react'
 import { RootState } from 'store'
 
+//TODO:
 const Blacklist = () => {
   const isTempUser = useSelector((state: RootState) => state.user.isTempUser)
   const [searchTerm, setSearchTerm] = useState('')
-  const [searchDate, setSearchDate] = useState(''); // e.g. "2025-06-08"
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('') // debounced value
+  const [searchDate, setSearchDate] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('') 
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null)
 
-  // Debounce logic: update debouncedSearchTerm 800ms after user stops typing
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm)
     }, 800)
 
-    // Cleanup timeout if user types again within 500ms
     return () => {
       clearTimeout(handler)
     }
   }, [searchTerm])
 
-  // Use debouncedSearchTerm to trigger API call
   const { data, isLoading, isError, error } = useGetBlacklistQuery(
     (debouncedSearchTerm || searchDate)
       ? { ssid: debouncedSearchTerm || undefined, date: searchDate || undefined }
@@ -51,7 +49,6 @@ const Blacklist = () => {
   return (
     <div className="p-3 small-laptop:p-4 normal-laptop:p-5 w-full max-w-full">
       <h1 className="text-lg small-laptop:text-xl font-bold mb-3 small-laptop:mb-4" data-tour="blacklist-title">Blacklist</h1>
-      {/* Search Bar */}
       <div className="mb-3 small-laptop:mb-4 flex flex-col small-laptop:flex-row gap-2">
         <input
           type="text"

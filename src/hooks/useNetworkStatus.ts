@@ -6,10 +6,6 @@ interface NetworkStatus {
   isServerReachable: boolean
 }
 
-/**
- * Hook to monitor network status and server connectivity
- * Uses navigator.onLine API and attempts a lightweight API ping
- */
 export const useNetworkStatus = (): NetworkStatus => {
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [isServerReachable, setIsServerReachable] = useState(false)
@@ -24,16 +20,13 @@ export const useNetworkStatus = (): NetworkStatus => {
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
 
-    // Check server reachability when online
     const checkServerReachability = async () => {
       if (navigator.onLine) {
         try {
           const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
-          // Try to ping the API base URL with a lightweight request
           const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 3000) // 3 second timeout
+          const timeoutId = setTimeout(() => controller.abort(), 3000) 
           
-          // Try HEAD request first (lightweight)
           try {
             const response = await fetch(`${apiUrl}`, {
               method: 'HEAD',
@@ -42,9 +35,8 @@ export const useNetworkStatus = (): NetworkStatus => {
             })
             
             clearTimeout(timeoutId)
-            setIsServerReachable(response.ok || response.status < 500) // Accept any non-server-error response
+            setIsServerReachable(response.ok || response.status < 500) 
           } catch (headError) {
-            // If HEAD fails, try OPTIONS (CORS preflight)
             clearTimeout(timeoutId)
             const optionsController = new AbortController()
             const optionsTimeoutId = setTimeout(() => optionsController.abort(), 3000)
@@ -70,10 +62,7 @@ export const useNetworkStatus = (): NetworkStatus => {
       }
     }
 
-    // Initial check
     checkServerReachability()
-
-    // Periodic check every 10 seconds when online
     const intervalId = setInterval(() => {
       if (navigator.onLine) {
         checkServerReachability()

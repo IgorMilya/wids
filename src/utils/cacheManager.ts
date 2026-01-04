@@ -12,10 +12,7 @@ interface NetworkCache {
   cachedAt: number
 }
 
-/**
- * Save network cache for a device
- * Limits to 50 whitelist + 50 blacklist (most recent)
- */
+
 export const saveNetworkCache = async (
   deviceId: string,
   whitelist: WhitelistedNetworkType[],
@@ -24,7 +21,6 @@ export const saveNetworkCache = async (
   try {
     const store = await load(NETWORK_CACHE_FILE, { autoSave: false })
     
-    // Limit to most recent networks
     const limitedWhitelist = whitelist.slice(0, MAX_WHITELIST_CACHE)
     const limitedBlacklist = blacklist.slice(0, MAX_BLACKLIST_CACHE)
 
@@ -35,12 +31,10 @@ export const saveNetworkCache = async (
       cachedAt: Date.now(),
     }
 
-    // Store cache by device ID
     await store.set(deviceId, cache)
     await store.save()
   } catch (error) {
     console.error('Failed to save network cache:', error)
-    // Fallback to localStorage if Tauri store fails
     try {
       const cache: NetworkCache = {
         deviceId,
@@ -55,9 +49,6 @@ export const saveNetworkCache = async (
   }
 }
 
-/**
- * Load network cache for a device
- */
 export const loadNetworkCache = async (deviceId: string): Promise<NetworkCache | null> => {
   try {
     const store = await load(NETWORK_CACHE_FILE, { autoSave: false })
@@ -70,7 +61,6 @@ export const loadNetworkCache = async (deviceId: string): Promise<NetworkCache |
     return null
   } catch (error) {
     console.error('Failed to load network cache:', error)
-    // Fallback to localStorage if Tauri store fails
     try {
       const cached = localStorage.getItem(`network_cache_${deviceId}`)
       if (cached) {
@@ -83,9 +73,6 @@ export const loadNetworkCache = async (deviceId: string): Promise<NetworkCache |
   }
 }
 
-/**
- * Clear network cache for a device
- */
 export const clearNetworkCache = async (deviceId: string): Promise<void> => {
   try {
     const store = await load(NETWORK_CACHE_FILE, { autoSave: false })
@@ -93,7 +80,6 @@ export const clearNetworkCache = async (deviceId: string): Promise<void> => {
     await store.save()
   } catch (error) {
     console.error('Failed to clear network cache:', error)
-    // Fallback to localStorage
     try {
       localStorage.removeItem(`network_cache_${deviceId}`)
     } catch (localError) {

@@ -7,13 +7,12 @@ import { Button, Chip, Table } from 'UI'
 import { useGetBlacklistQuery, useGetWhitelistQuery, useAddLogMutation, useGetProfileQuery } from 'store/api'
 import { WifiNetworkType } from 'types'
 import { RootState } from 'store'
-import { getDeviceId } from 'utils/deviceId'
-import { saveNetworkCache } from 'utils/cacheManager'
+import { getDeviceId, saveNetworkCache } from 'utils'
 import { TableScanner } from './table-scanner'
 import { tableTitle } from './scanner.utils'
 
+// TODO:
 const Scanner: FC = () => {
-  const navigate = useNavigate()
   const isTempUser = useSelector((state: RootState) => state.user.isTempUser)
   const cachedNetworks = useSelector((state: RootState) => state.user.cachedNetworks)
   const [networks, setNetworks] = useState<WifiNetworkType[]>([])
@@ -24,7 +23,6 @@ const Scanner: FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   const [isActive, setIsActive] = useState(false)
   
-  // Skip API queries for temp users, use cached networks instead
   const { data: blacklist = [] } = useGetBlacklistQuery(undefined, { skip: isTempUser })
   const { data: whitelist = [] } = useGetWhitelistQuery(undefined, { skip: isTempUser })
   const { data: profile } = useGetProfileQuery(undefined, { skip: isTempUser })
@@ -33,7 +31,6 @@ const Scanner: FC = () => {
   const [isScanning, setIsScanning] = useState(false)
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null)
   
-  // Use cached networks if temp user, otherwise use API data
   const effectiveBlacklist = isTempUser ? cachedNetworks.blacklist : blacklist
   const effectiveWhitelist = isTempUser ? cachedNetworks.whitelist : whitelist
 
@@ -57,67 +54,54 @@ const Scanner: FC = () => {
     'WL': 0,
   }
 
-  // Helper function to calculate effective minimum signal strength based on speed_network_preference
   const getEffectiveMinSignal = (baseMinSignal: number | null | undefined, speedPreference: string | undefined): number => {
     if (baseMinSignal !== null && baseMinSignal !== undefined) {
-      // If user explicitly set to 0, respect it (show all networks regardless of signal)
       if (baseMinSignal === 0) {
         return 0
       }
-      // If explicitly set, use it, but adjust based on speed preference
       switch (speedPreference) {
         case 'high':
-          return Math.max(baseMinSignal, 70) // Require at least 70% for high speed
+          return Math.max(baseMinSignal, 70)
         case 'medium':
-          return Math.max(baseMinSignal, 50) // Require at least 50% for medium
+          return Math.max(baseMinSignal, 50) 
         case 'low':
-          // For low speed preference, respect user's choice if it's low enough
-          // Only enforce minimum if user didn't explicitly set a low value
-          return Math.max(baseMinSignal, 0) // Allow any signal for low speed
+          return Math.max(baseMinSignal, 0) 
         default:
           return baseMinSignal || 50
       }
     }
-    // Default based on speed preference
     switch (speedPreference) {
       case 'high':
         return 70
       case 'medium':
         return 50
       case 'low':
-        return 0 // Allow all signals for low speed preference when not explicitly set
+        return 0 
       default:
         return 50
     }
   }
 
-  // Helper function to calculate effective maximum risk level based on confidence_level
   const getEffectiveMaxRisk = (baseMaxRisk: string | null | undefined, confidenceLevel: string | undefined, profileType: string | undefined): string => {
     const baseRiskValue = baseMaxRisk ? riskLevelValue[baseMaxRisk] || 4 : 4
     
-    // Adjust based on confidence level
     let adjustedRisk = baseRiskValue
     switch (confidenceLevel) {
       case 'high':
-        // High confidence = stricter (lower max risk)
-        adjustedRisk = Math.min(baseRiskValue, 2) // Only Low or Medium
+        adjustedRisk = Math.min(baseRiskValue, 2) 
         break
       case 'medium':
-        adjustedRisk = Math.min(baseRiskValue, 3) // Up to High
+        adjustedRisk = Math.min(baseRiskValue, 3) 
         break
       case 'low':
-        // Low confidence = more lenient (allow higher risk)
-        adjustedRisk = 4 // Allow all
+        adjustedRisk = 4 
         break
     }
 
-    // Adjust based on profile type (work requires more security)
     if (profileType === 'work') {
-      adjustedRisk = Math.min(adjustedRisk, 2) // Work networks should be Low or Medium only
+      adjustedRisk = Math.min(adjustedRisk, 2) 
     }
-    // personal: use adjusted risk as calculated
 
-    // Convert back to risk level string
     if (adjustedRisk <= 1) return 'L'
     if (adjustedRisk <= 2) return 'M'
     if (adjustedRisk <= 3) return 'H'
@@ -127,7 +111,6 @@ const Scanner: FC = () => {
   const scanWifi = async () => {
     try {
       setIsScanning(true)
-      // Skip logging for guest users
       if (!isTempUser) {
         addLog({ action: "SCAN_START", network_ssid: "-", details: "User started Wi-Fi scan" })
       }
@@ -142,7 +125,6 @@ const Scanner: FC = () => {
         addLog({ action: "SCAN_FAILED", network_ssid: "-", details: errorMessage })
       }
       console.error('Wi-Fi scan failed', error)
-      // Show user-friendly error message
       alert(`Wi-Fi Scan Failed:\n\n${errorMessage}\n\nPlease ensure your WiFi adapter is enabled and try again.`)
     } finally {
       setIsScanning(false)
@@ -225,16 +207,12 @@ const Scanner: FC = () => {
   const onIsActive = () => setIsActive(!isActive)
 
 
-  // Fetch active network only once on mount
   useEffect(() => {
     fetchActiveNetwork()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Load whitelist/blacklist when they change
   useEffect(() => {
     if (isTempUser) {
-      // For temp users, use cached networks directly
       setLocalWhitelist(effectiveWhitelist.map(wl => wl.bssid.toLowerCase()))
       setLocalBlacklist(effectiveBlacklist.map(bl => bl.bssid.toLowerCase()))
     } else {
@@ -245,24 +223,17 @@ const Scanner: FC = () => {
 
 
   useEffect(() => {
-    // Only sync if not temp user
     if (!isTempUser) {
-      // Always sync whitelist to store, even if empty, to ensure local state is updated
-      // This ensures deleted networks are removed from localWhitelist immediately
       syncWhitelistToStore().catch(console.error)
     }
   }, [effectiveWhitelist, isTempUser])
 
   useEffect(() => {
-    // Only sync if not temp user
     if (!isTempUser) {
-      // Always sync blacklist to store, even if empty, to ensure local state is updated
-      // This ensures deleted networks are removed from localBlacklist immediately
       syncBlacklistToStore().catch(console.error)
     }
   }, [effectiveBlacklist, isTempUser])
 
-  // Cache networks when successfully loaded (for authenticated users)
   useEffect(() => {
     if (!isTempUser && (effectiveWhitelist.length > 0 || effectiveBlacklist.length > 0)) {
       const cacheNetworks = async () => {
@@ -294,12 +265,9 @@ const Scanner: FC = () => {
         risk: localWhitelist.includes(item.bssid.toLowerCase()) ? 'WL' : item.risk,
       }))
       .filter(item => {
-        // Whitelisted networks always bypass profile filters - they should always be shown
         const isWhitelisted = item.risk === 'WL'
         
-        // Apply profile filters if profile exists and network is not whitelisted
         if (profile && !isWhitelisted) {
-          // Calculate effective values based on preferences
           const effectiveMinSignal = getEffectiveMinSignal(
             profile.min_signal_strength,
             profile.speed_network_preference
@@ -310,14 +278,9 @@ const Scanner: FC = () => {
             profile.profile_type
           )
 
-          // Apply profiling_preference strategy
-          // If profiling_preference is "speed", prioritize signal strength over security
-          // If profiling_preference is "security", prioritize security over speed
-          // If profiling_preference is "balanced", use balanced approach
           const isSpeedPriority = profile.profiling_preference === 'speed'
           const isSecurityPriority = profile.profiling_preference === 'security'
 
-          // Filter by preferred authentication types
           if (profile.preferred_authentication && profile.preferred_authentication.length > 0) {
             const hasPreferredAuth = profile.preferred_authentication.some(auth =>
               item.authentication?.toLowerCase().includes(auth.toLowerCase())
@@ -325,56 +288,40 @@ const Scanner: FC = () => {
             if (!hasPreferredAuth) return false
           }
 
-          // Filter by effective minimum signal strength
           const signalStrength = parseInt(item.signal?.replace('%', '') || '0')
           if (signalStrength < effectiveMinSignal) return false
 
-          // Filter by effective maximum risk level
           const itemRiskValue = riskLevelValue[item.risk] || 4
           const maxRiskValue = riskLevelValue[effectiveMaxRisk] || 4
-          // If confidence_level is "low", always allow all networks regardless of base max_risk_level
           if (profile.confidence_level === 'low') {
-            // Low confidence = allow all risk levels, don't filter by risk
           } else if (itemRiskValue > maxRiskValue) {
             return false
           }
 
-          // Additional filtering based on profiling_preference priority
           if (isSecurityPriority && itemRiskValue > 2) {
-            // Security priority: only show Low and Medium risk
             return false
           }
 
           if (isSpeedPriority && signalStrength < effectiveMinSignal * 0.8) {
-            // Speed priority: can accept slightly lower signal, but not too low
             if (signalStrength < effectiveMinSignal * 0.6) return false
           }
 
-          // Profile type specific filtering
           if (profile.profile_type === 'work') {
-            // Work profiles: only show secure authentication types
             const secureAuth = ['WPA3', 'WPA2'].some(auth =>
               item.authentication?.toLowerCase().includes(auth.toLowerCase())
             )
             if (!secureAuth) return false
-            // Work: no high or critical risk networks
             if (itemRiskValue > 2) return false
           }
         }
 
-        // Apply manual risk filter
         if (chipMappedRisk && item.risk !== chipMappedRisk) {
-          // Only show networks that match the selected risk filter
-          // WL networks should only show when "Whitelisted" filter is explicitly selected
           return false
         }
 
-        // Apply search term filter
         if (!term) return true
 
-        // Check if search term matches the risk level
         const matchesRisk = mappedRisk ? item.risk === mappedRisk : false
-        // Also check if searching for WL networks by searching for "wl", "whitelist", or "whitelisted"
         const matchesWLSearch = !mappedRisk && (term === 'wl' || term === 'whitelist' || term === 'whitelisted') && item.risk === 'WL'
         
         const matchesText =

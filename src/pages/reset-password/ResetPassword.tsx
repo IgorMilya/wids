@@ -2,14 +2,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Formik, Form, FormikHelpers } from 'formik'
 import { object, string, ref } from 'yup'
-import {
-  useResetPasswordRequestMutation,
-  useResetPasswordConfirmMutation,
-} from 'store/api'
+import { useResetPasswordRequestMutation, useResetPasswordConfirmMutation} from 'store/api'
 import { ROUTES } from 'routes/routes.utils'
-import { Button } from 'UI'
-import Input from 'UI/input/Input'
-import { validationUser } from 'utils/validation'
+import { Button, Input } from 'UI'
+import { validationUser } from 'utils'
+
+//TODO:
 
 const requestResetInitialValues = {
   email: '',

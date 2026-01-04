@@ -4,7 +4,6 @@ export const useWifiActions = () => {
   const { log } = useLogger()
 
   const connect = async (ssid: string, bssid: string) => {
-    // your existing connect logic here...
 
     await log({
       ssid,
@@ -15,7 +14,6 @@ export const useWifiActions = () => {
   }
 
   const disconnect = async (ssid: string, bssid: string) => {
-    // your existing disconnect logic here...
 
     await log({
       ssid,

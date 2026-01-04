@@ -1,5 +1,5 @@
 import { object, string, ref } from 'yup'
-import { validationUser } from 'utils/validation'
+import { validationUser } from 'utils'
 
 export const passwordChangeInitialValues = {
   currentPassword: '',

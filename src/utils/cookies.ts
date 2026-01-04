@@ -3,10 +3,9 @@ import Cookies from 'js-cookie'
 const TOKEN_COOKIE = 'auth_token'
 const REFRESH_TOKEN_COOKIE = 'refresh_token'
 
-// Cookie options - set secure and sameSite for production
 const cookieOptions = {
-  expires: 30, // 30 days
-  secure: import.meta.env.PROD, // Only send over HTTPS in production
+  expires: 30, 
+  secure: import.meta.env.PROD, 
   sameSite: 'strict' as const,
   path: '/',
 }

@@ -7,7 +7,6 @@ import { logoutUser } from 'store/reducers/user.slice'
 import { useLocation, NavLink, useNavigate } from 'react-router-dom'
 import { ROUTES } from 'routes/routes.utils'
 import { useLogoutMutation } from 'store/api'
-import { cookieUtils } from 'utils/cookies'
 import { Button } from 'UI'
 
 interface NavbarProps {
@@ -26,20 +25,15 @@ const Navbar: FC<NavbarProps> = ({ data }) => {
 
   const handleLogout = async () => {
     try {
-      // Attempt to revoke refresh token on server
-      // Pass refresh_token if available, otherwise revoke all tokens for the user
       await logout({ refresh_token: refresh_token || undefined }).unwrap()
     } catch (error) {
-      // Log error but continue with logout anyway (fail gracefully)
       console.error('Failed to revoke refresh token on server:', error)
     } finally {
-      // Always clear local state and navigate to login
       dispatch(logoutUser())
       navigate(ROUTES.LOGIN)
     }
   }
 
-  // Routes that should be disabled in guest mode
   const disabledRoutes = isTempUser 
     ? [ROUTES.BLACKLIST, ROUTES.WHITELIST, ROUTES.LOGS, ROUTES.ANALYTICS]
     : []
@@ -57,7 +51,6 @@ const Navbar: FC<NavbarProps> = ({ data }) => {
       </div>
       {isTempUser ? (
         <>
-          {/* Show Login and Register buttons for guest users */}
           <Button
             onClick={() => navigate(ROUTES.LOGIN)}
             variant="outline"
@@ -103,7 +96,6 @@ const Navbar: FC<NavbarProps> = ({ data }) => {
         </>
       ) : (
         <>
-          {/* Show Profile and Logout for authenticated users */}
           <NavLink
             to={ROUTES.PROFILE}
             className={`block text-xs small-laptop:text-sm normal-laptop:text-[14px] p-3 small-laptop:p-[12px] normal-laptop:p-[15px] font-medium transition border-t border-gray-700 ${

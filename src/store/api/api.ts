@@ -33,7 +33,10 @@ const baseQueryWithReauth: BaseQueryFn<
     }
   }
 
-  if (result.error && result.error.status === 401) {
+  const url = typeof args === 'string' ? args : args.url
+  const isAuthEndpoint = typeof url === 'string' && (url.startsWith('/auth/login') || url.startsWith('/auth/register') || url.startsWith('/auth/reset'))
+  
+  if (result.error && result.error.status === 401 && !isAuthEndpoint) {
     const refreshToken = cookieUtils.getRefreshToken()
     
     if (refreshToken) {

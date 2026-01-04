@@ -10,5 +10,4 @@ export const ROUTES ={
   RESET_PASSWORD: '/reset-password',
   PROFILE: '/profile',
   ANALYTICS: '/analytics',
-  // MONITORING_SETTINGS: '/monitoring-settings',
 }

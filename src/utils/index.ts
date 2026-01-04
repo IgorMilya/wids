@@ -1,4 +1,4 @@
-export * from './cookies'
+export {cookieUtils} from './cookies'
 export {jwtUtils} from './jwt'
 export {validationUser} from './validation'
 export {REGEX} from './regex'

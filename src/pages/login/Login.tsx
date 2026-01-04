@@ -8,10 +8,9 @@ import { loginUser } from 'store/reducers/user.slice'
 import { ROUTES } from 'routes/routes.utils'
 import { Input, Button } from 'UI'
 import { initialValues, validationSchema } from './LoginForm.utils'
-import { getDeviceId } from 'utils/deviceId'
-import { saveNetworkCache } from 'utils/cacheManager'
-import { enableGuestMode } from 'utils/guestMode'
+import { saveNetworkCache, enableGuestMode, getDeviceId } from 'utils'
 
+//TODO:
 interface LoginFormValues {
   email: string
   password: string
@@ -35,6 +34,7 @@ export const Login = () => {
 
     if (!captchaToken) {
       setError('Please complete the captcha.')
+      actions.setSubmitting(false)
       return
     }
 
@@ -47,7 +47,6 @@ export const Login = () => {
 
       console.log('Login response:', response)
 
-      // Save user & tokens
       dispatch(
         loginUser({
           user: { id: response.user_id, username: response.username ?? null },
@@ -56,19 +55,12 @@ export const Login = () => {
         })
       )
 
-      // Cache networks for offline use
       try {
         const deviceId = await getDeviceId()
         console.log('deviceId', deviceId);
-        
-        // Fetch blacklist and whitelist to cache
-        // Note: We'll fetch these after login, but for now we'll cache empty arrays
-        // The actual cache will be updated when user navigates to Scanner
-        // For immediate cache, we could use the API directly here
         await saveNetworkCache(deviceId, [], [])
       } catch (error) {
         console.error('Failed to cache networks:', error)
-        // Don't block login if cache fails
       }
 
       recaptchaRef.current?.reset()
@@ -77,12 +69,10 @@ export const Login = () => {
       navigate('/scanner')
     } catch (err: any) {
       console.error('Login error:', err)
-      // Backend returns {"error": "..."} for failed login
       setError(err?.data?.error || err?.data?.message || 'Login failed. Please try again.')
-      // Reset captcha on failed login so user must complete it again
       recaptchaRef.current?.reset()
       setCaptchaToken(null)
-      // Keep form values - Formik preserves them automatically
+      actions.setSubmitting(false)
     }
   }
 
@@ -92,7 +82,6 @@ export const Login = () => {
       navigate(ROUTES.SCANNER)
     } catch (error) {
       console.error('Failed to enable guest mode:', error)
-      // Still navigate to scanner even if cache fails
       navigate(ROUTES.SCANNER)
     }
   }
@@ -108,8 +97,12 @@ export const Login = () => {
           initialValues={initialValues}
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
+          enableReinitialize={false}
         >
-          <Form className="flex flex-col gap-4">
+          <Form 
+            className="flex flex-col gap-4"
+            noValidate
+          >
             <Input
               name="email"
               labelText="Email"

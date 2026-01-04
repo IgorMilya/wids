@@ -1,6 +1,6 @@
 import React from 'react'
 import { Pie } from 'react-chartjs-2'
-import { SecurityMetrics } from 'store/api/analytics.api'
+import { SecurityMetrics } from 'store/api'
 
 const COLORS = {
   highRisk: '#ef4444',

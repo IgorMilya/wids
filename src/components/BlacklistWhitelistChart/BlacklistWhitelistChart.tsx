@@ -1,6 +1,6 @@
 import React from 'react'
 import { Bar } from 'react-chartjs-2'
-import { BlacklistWhitelistStats } from 'store/api/analytics.api'
+import { BlacklistWhitelistStats } from 'store/api'
 
 const COLORS = {
   danger: '#ef4444',

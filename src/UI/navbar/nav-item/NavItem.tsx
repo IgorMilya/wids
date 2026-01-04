@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import { FC } from 'react'
 import { LinkItemType } from 'types'
 import { NavLink, useLocation } from 'react-router-dom'
 
