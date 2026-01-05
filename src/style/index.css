@@ -11,7 +11,6 @@ input {
     outline: none;
 }
 
-/* Cursor pointer for interactive elements */
 select,
 button,
 [role="button"],
@@ -23,7 +22,6 @@ label[for],
     cursor: pointer;
 }
 
-/* Smooth transitions for specific elements */
 select,
 button,
 input,
@@ -56,7 +54,6 @@ textarea,
     }
 }
 
-/* Shepherd.js custom theme */
 .shepherd-theme-custom {
     max-width: 400px;
 }

@@ -7,11 +7,9 @@ export const getNetworkVerdict = (network: WifiNetworkType): { description: stri
 
   const lines: string[] = []
 
-  // Basic technical info in plain language
   lines.push(ssid ? `Network name: "${ssid}"` : 'Hidden network name')
   lines.push(bssid ? `Network ID: ${bssid}` : 'Hidden network ID')
 
-  // Authentication
   let authVerdict = ''
   if (authentication) {
     if (authentication.toLowerCase().includes('wpa3')) {
@@ -53,7 +51,6 @@ export const getNetworkVerdict = (network: WifiNetworkType): { description: stri
   }
 
 
-  // Signal
   let signalVerdict = ''
   if (signal !== undefined && signal !== null) {
     if (signal > '75') {
@@ -71,7 +68,6 @@ export const getNetworkVerdict = (network: WifiNetworkType): { description: stri
     signalVerdict = 'unknown signal'
   }
 
-  // Risk
   let riskVerdict = ''
   switch (risk) {
     case 'C':
@@ -104,7 +100,6 @@ export const getNetworkVerdict = (network: WifiNetworkType): { description: stri
     riskVerdict = 'high risk (possible Evil Twin)'
   }
 
-  // Generate human-readable verdict
   let verdict = ''
   if (risk === 'L' || risk === 'WL') {
     verdict = `This network is safe to connect. ${signalVerdict.charAt(0).toUpperCase() + signalVerdict.slice(1)}.`

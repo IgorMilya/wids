@@ -120,7 +120,6 @@ const userSlice = createSlice({
     updateUsername: (state, action: PayloadAction<string>) => {
       if (state.user) {
         state.user.username = action.payload
-        // Don't store in localStorage, keep only in Redux state
       }
     },
     setIsTempUser: (state, action: PayloadAction<boolean>) => {

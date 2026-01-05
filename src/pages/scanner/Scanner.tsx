@@ -448,10 +448,8 @@ const Scanner: FC = () => {
                 bValue = b.bssid || ''
                 break
               case 'Signal':
-                // Parse signal value - remove % and any non-numeric characters, then convert to number
                 const parseSignal = (signal: string | undefined): number => {
                   if (!signal) return 0
-                  // Remove % and any non-numeric characters except decimal point
                   const cleaned = signal.toString().replace(/[^0-9.]/g, '')
                   const parsed = parseFloat(cleaned)
                   return isNaN(parsed) ? 0 : parsed

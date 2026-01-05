@@ -8,16 +8,8 @@ mod parse_active_interface;
 mod parse_network_scan;
 mod scan_wifi;
 mod trigger_scan;
-// Real-time monitoring feature - COMMENTED OUT (will be re-enabled in future)
-// mod threat_detection;
-// mod continuous_monitor;
-// mod monitoring_commands;
 
 pub use connect_wifi::connect_wifi;
 pub use disconnect_wifi::disconnect_wifi;
 pub use get_active_network::get_active_network;
 pub use scan_wifi::scan_wifi;
-// Real-time monitoring feature - COMMENTED OUT (will be re-enabled in future)
-// pub use threat_detection::detect_threats;
-// pub use continuous_monitor::{MonitorHandle, MonitorConfig};
-// pub use monitoring_commands::{start_monitoring, stop_monitoring, get_monitoring_status};
