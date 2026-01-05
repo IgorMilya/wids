@@ -35,8 +35,10 @@ const baseQueryWithReauth: BaseQueryFn<
 
   const url = typeof args === 'string' ? args : args.url
   const isAuthEndpoint = typeof url === 'string' && (url.startsWith('/auth/login') || url.startsWith('/auth/register') || url.startsWith('/auth/reset'))
-  
+  console.log('isAuthEndpoint 1', isAuthEndpoint);
+
   if (result.error && result.error.status === 401 && !isAuthEndpoint) {
+    console.log('isAuthEndpoint 2', isAuthEndpoint);
     const refreshToken = cookieUtils.getRefreshToken()
     
     if (refreshToken) {

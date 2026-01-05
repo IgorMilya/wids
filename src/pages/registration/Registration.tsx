@@ -54,6 +54,7 @@ export const Registration = () => {
 
     if (!captchaToken) {
       setError('Please complete the captcha.')
+      actions.setSubmitting(false)
       return
     }
 
@@ -73,8 +74,11 @@ export const Registration = () => {
       setStep('verify')
       setInfo('Verification code sent to your email.')
     } catch (err: any) {
-      console.error(err)
-      setError(err?.data?.error || 'Registration failed. Please try again.')
+      console.error('Registration error:', err)
+      setError(err?.data?.error || err?.data?.message || 'Registration failed. Please try again.')
+      recaptchaRef.current?.reset()
+      setCaptchaToken(null)
+      actions.setSubmitting(false)
     }
   }
 
