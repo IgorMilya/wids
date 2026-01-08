@@ -147,7 +147,6 @@ export const analyticsApi = api.injectEndpoints({
         const queryString = queryParams.toString()
         return `/analytics${queryString ? `?${queryString}` : ''}`
       },
-      providesTags: ['Analytics'],
       keepUnusedDataFor: 300, 
     }),
   }),
