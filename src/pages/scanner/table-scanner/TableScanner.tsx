@@ -20,37 +20,31 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
   const [addBlacklist, { isLoading: isAdding }] = useAddBlacklistMutation()
   const [addWhitelist, { isLoading: isAddingWhitelist }] = useAddWhitelistMutation()
   const [isConnecting, setIsConnecting] = useState(false)
-  const [addLog] = useAddLogMutation()       //  ← LOGGING HERE
+  const [addLog] = useAddLogMutation()       
   const { description, verdict } = getNetworkVerdict(data)
 
-  // Helper function to build threat information string for logging
-  // This ensures threat types are properly logged for analytics tracking
+
   const buildThreatInfo = (): string => {
     const threats: string[] = []
     
-    // Check for evil twin (highest priority threat)
     if (is_evil_twin) {
       threats.push('evil twin')
     }
     
-    // Check for open network (matches backend pattern: "open.*network|no.*encryption")
     if (authentication && authentication.toLowerCase().includes('open')) {
       threats.push('open network')
     }
     
-    // Check for no encryption (matches backend pattern: "open.*network|no.*encryption")
-    // Also log in format that matches "Encryption: None" pattern
+
     if (!encryption || encryption.toLowerCase().includes('none') || encryption === '') {
       threats.push('no encryption')
     }
     
-    // Check for weak encryption (matches backend pattern: "weak.*encryption|WEP|TKIP")
     if (encryption) {
       const encLower = encryption.toLowerCase()
       if (encLower.includes('wep') || encLower.includes('tkip')) {
         threats.push('weak encryption')
       }
-      // Also add specific encryption types for better matching
       if (encLower.includes('wep')) {
         threats.push('WEP')
       }
@@ -59,8 +53,6 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
       }
     }
     
-    // Risk level C or H could indicate rogue AP
-    // Only add rogue if not already identified as evil twin (evil twin is a specific type of rogue)
     if ((risk === 'C' || risk === 'H') && !is_evil_twin) {
       threats.push('rogue')
     }
@@ -69,7 +61,6 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
   }
 
   const logAction = (action: string, details?: string) => {
-    // Only log if not a temp user (temp users are in offline mode)
     if (!isTempUser) {
       addLog({
         network_ssid: ssid || 'Hidden',
@@ -77,7 +68,6 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
         action,
         details,
       }).catch((error) => {
-        // Silently fail logging in offline mode - don't redirect user
         console.warn('Failed to log action (offline mode):', error)
       })
     }
@@ -92,7 +82,6 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
         authentication: authentication,
       })
       alert(result)
-      // Include risk level and threat information in connection log for analytics tracking
       const riskLabel = risk === 'C' ? 'Critical' : risk === 'H' ? 'High' : risk === 'M' ? 'Medium' : risk === 'L' ? 'Low' : risk === 'WL' ? 'Whitelisted' : 'Unknown'
       const threatInfo = buildThreatInfo()
       logAction('CONNECTED', `Connected successfully: ${result}. Risk level: ${risk} (${riskLabel})${threatInfo}`)
@@ -110,7 +99,6 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
         const password = prompt(`Connection failed. Enter new password for "${ssid}":`)
         if (!password) {
           alert('Password is required to connect.')
-          // Log failure only if user cancels password prompt
           logAction('CONNECT_FAILED', 'User cancelled password entry')
           return
         }
@@ -122,18 +110,15 @@ const TableScanner: FC<TableScannerProps> = ({ data, isShowNetwork, onToggle, on
             authentication: authentication,
           })
           alert(retry)
-          // Include risk level and threat information in connection log for analytics tracking
           const riskLabel = risk === 'C' ? 'Critical' : risk === 'H' ? 'High' : risk === 'M' ? 'Medium' : risk === 'L' ? 'Low' : risk === 'WL' ? 'Whitelisted' : 'Unknown'
           const threatInfo = buildThreatInfo()
           logAction('CONNECTED_RETRY', `Connected after password retry. Risk level: ${risk} (${riskLabel})${threatInfo}`)
           onFetchActiveNetwork()
         } catch (finalError: any) {
-          // Only log the final failure - don't log the initial failure if we retried
           logAction('CONNECT_FAILED', finalError.toString())
           alert('Still failed to connect: ' + finalError)
         }
       } else {
-        // Only log failure if we're not going to retry
         logAction('CONNECT_FAILED', errMessage)
         alert('Connection failed: ' + errMessage)
       }

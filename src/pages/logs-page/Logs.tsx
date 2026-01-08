@@ -173,7 +173,6 @@ const Logs = () => {
       sort_direction?: 'asc' | 'desc'
     } = {};
 
-    // Only include non-empty values
     if (debouncedSearchTerm.trim()) {
       exportParams.ssid = debouncedSearchTerm.trim();
     }

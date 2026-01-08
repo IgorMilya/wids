@@ -93,7 +93,6 @@ export const Registration = () => {
     try {
       const response = await verifyEmail({ email, code: values.code }).unwrap()
 
-      // Reset RTK Query cache to ensure fresh data for the new user
       dispatch(api.util.resetApiState())
 
       dispatch(

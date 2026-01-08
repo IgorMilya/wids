@@ -47,7 +47,6 @@ export const Login = () => {
 
       console.log('Login response:', response)
 
-      // Reset RTK Query cache to ensure fresh data for the new user
       dispatch(api.util.resetApiState())
 
       dispatch(

@@ -51,7 +51,6 @@ interface RiskLevelChartProps {
 }
 
 export const RiskLevelChart = React.memo(({ securityMetrics }: RiskLevelChartProps) => {
-  // Build data and labels arrays, preserving order and matching colors correctly
   const riskLevelEntries = [
     { label: 'High Risk', value: securityMetrics.high_risk_connections, color: COLORS.highRisk },
     { label: 'Medium Risk', value: securityMetrics.medium_risk_connections, color: COLORS.mediumRisk },

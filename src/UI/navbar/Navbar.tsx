@@ -31,7 +31,6 @@ const Navbar: FC<NavbarProps> = ({ data }) => {
     } catch (error) {
       console.error('Failed to revoke refresh token on server:', error)
     } finally {
-      // Reset RTK Query cache to clear all cached data (blacklist, whitelist, etc.)
       dispatch(api.util.resetApiState())
       dispatch(logoutUser())
       navigate(ROUTES.LOGIN)

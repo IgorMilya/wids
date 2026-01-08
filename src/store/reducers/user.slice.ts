@@ -21,12 +21,10 @@ interface UserState {
   }
 }
 
-// Initialize state from cookies and JWT token
 const getInitialState = (): UserState => {
   const token = cookieUtils.getToken() || null
   const refresh_token = cookieUtils.getRefreshToken() || null
   
-  // Extract user data from JWT token if available
   let user: StoredUser | null = null
   if (token) {
     const userId = jwtUtils.getUserId(token)
@@ -66,11 +64,9 @@ const userSlice = createSlice({
       state.token = action.payload.token
       state.refresh_token = action.payload.refresh_token
 
-      // Store tokens in cookies (not localStorage)
       cookieUtils.setToken(action.payload.token)
       cookieUtils.setRefreshToken(action.payload.refresh_token)
       
-      // Extract user data from JWT token as source of truth (don't store user data separately)
       const userId = jwtUtils.getUserId(action.payload.token)
       const username = jwtUtils.getUsername(action.payload.token)
       if (userId) {
@@ -79,11 +75,9 @@ const userSlice = createSlice({
           username: username || action.payload.user.username || null,
         }
       } else {
-        // Fallback to action payload if JWT decode fails (shouldn't happen)
         state.user = action.payload.user
       }
       
-      // Clear temp user mode on login
       state.isTempUser = false
     },
 
@@ -94,11 +88,9 @@ const userSlice = createSlice({
       state.token = action.payload.token
       state.refresh_token = action.payload.refresh_token
 
-      // Store tokens in cookies
       cookieUtils.setToken(action.payload.token)
       cookieUtils.setRefreshToken(action.payload.refresh_token)
       
-      // Extract user data from new JWT token
       const userId = jwtUtils.getUserId(action.payload.token)
       const username = jwtUtils.getUsername(action.payload.token)
       if (userId) {
@@ -114,7 +106,6 @@ const userSlice = createSlice({
       state.token = null
       state.refresh_token = null
 
-      // Remove tokens from cookies
       cookieUtils.removeTokens()
     },
     updateUsername: (state, action: PayloadAction<string>) => {

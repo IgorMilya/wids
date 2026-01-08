@@ -14,7 +14,6 @@ window.addEventListener('tokensRefreshed', ((event: CustomEvent<{ token: string;
 }) as EventListener)
 
 window.addEventListener('authLogout', () => {
-  // Reset RTK Query cache to clear all cached data
   store.dispatch(api.util.resetApiState())
   store.dispatch(logoutUser())
   window.location.href = '/login'

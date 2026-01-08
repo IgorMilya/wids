@@ -12,12 +12,10 @@ pub fn parse_network_scan(output: &str) -> Vec<WifiNetwork> {
     for line in output.lines() {
         let trimmed = line.trim();
         if trimmed.starts_with("SSID") && trimmed.contains(":") {
-            // Save previous network if exists before starting a new SSID
             if let Some(network) = current_bssid.take() {
                 networks.push(network);
             }
             
-            // Extract SSID value (handle "SSID 1 : value" format)
             let ssid_part = trimmed
                 .splitn(2, ':')
                 .nth(1)
@@ -25,10 +23,8 @@ pub fn parse_network_scan(output: &str) -> Vec<WifiNetwork> {
                 .trim()
                 .to_string();
             
-            // Only update if we got a meaningful SSID (not just empty)
             if !ssid_part.is_empty() {
                 current_ssid = ssid_part;
-                // Reset auth and encryption when starting a new SSID
                 current_auth = String::new();
                 current_encryption = String::new();
             }
@@ -51,7 +47,6 @@ pub fn parse_network_scan(output: &str) -> Vec<WifiNetwork> {
                 networks.push(network);
             }
 
-            // Extract BSSID value (handle "BSSID 1 : value" format)
             let bssid = trimmed
                 .splitn(2, ':')
                 .nth(1)
@@ -59,7 +54,6 @@ pub fn parse_network_scan(output: &str) -> Vec<WifiNetwork> {
                 .trim()
                 .to_string();
             
-            // Only create new network if we have SSID and BSSID
             if !current_ssid.is_empty() && !bssid.is_empty() {
                 current_bssid = Some(WifiNetwork {
                     ssid: current_ssid.clone(),
