@@ -1,5 +1,5 @@
 import {useState, useRef, useEffect, memo} from 'react'
-import { useGetAnalyticsQuery } from 'store/api'
+import { cookieUtils } from 'utils/cookies'
 import {
   Chart as ChartJS,
   ArcElement,
@@ -28,27 +28,54 @@ ChartJS.register(
 )
 
 import { RiskLevelChart, ConnectionStatusChart, ThreatTypeChart, ChannelUsageChart, BlacklistWhitelistChart } from 'components'
-
+import type { AnalyticsResponse } from 'types/analytics.types'
 
 const Analytics = memo(() => {
   const [threatDateFilter, setThreatDateFilter] = useState<'day' | 'week' | 'month' | 'year' | 'all'>('all')
-  
+  const [data, setData] = useState<AnalyticsResponse | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isError, setIsError] = useState(false)
   const hasLoadedDataRef = useRef(false)
   
-  const { data, isLoading, isError } = useGetAnalyticsQuery(
-    { threatDateFilter },
-    {
-      refetchOnMountOrArgChange: true,
-      refetchOnFocus: false,
-      refetchOnReconnect: false,
-    }
-  )
-  
   useEffect(() => {
-    if (data) {
-      hasLoadedDataRef.current = true
+    const fetchAnalytics = async () => {
+      setIsLoading(true)
+      setIsError(false)
+      
+      try {
+        const token = cookieUtils.getToken()
+        const queryParams = new URLSearchParams()
+        if (threatDateFilter) {
+          queryParams.append('threat_date_filter', threatDateFilter)
+        }
+        const queryString = queryParams.toString()
+        const url = `${import.meta.env.VITE_API_BASE_URL}/analytics${queryString ? `?${queryString}` : ''}`
+        
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        })
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch analytics')
+        }
+        
+        const analyticsData = await response.json()
+        setData(analyticsData)
+        hasLoadedDataRef.current = true
+      } catch (error) {
+        console.error('Error fetching analytics:', error)
+        setIsError(true)
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }, [data])
+    
+    fetchAnalytics()
+  }, [threatDateFilter])
 
   if (isLoading && !data && !hasLoadedDataRef.current) {
     return (
@@ -100,9 +127,9 @@ const Analytics = memo(() => {
         </div>
 
         <div className="bg-white p-4 small-laptop:p-5 normal-laptop:p-6 rounded-lg shadow-md border-l-4 border-purple-500">
-          <h3 className="text-gray-600 text-xs small-laptop:text-sm font-medium mb-1 small-laptop:mb-2">Unique Networks</h3>
-          <p className="text-2xl small-laptop:text-3xl font-bold text-gray-800">{network_stats.unique_networks_scanned}</p>
-          <p className="text-xs text-gray-500 mt-1">Total discovered</p>
+          <h3 className="text-gray-600 text-xs small-laptop:text-sm font-medium mb-1 small-laptop:mb-2">Networks in Lists</h3>
+          <p className="text-2xl small-laptop:text-3xl font-bold text-gray-800">{network_stats.networks_in_lists}</p>
+          <p className="text-xs text-gray-500 mt-1">Blacklist + Whitelist</p>
         </div>
       </div>
 

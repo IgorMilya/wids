@@ -1,6 +1,6 @@
 import React from 'react'
 import { Bar } from 'react-chartjs-2'
-import { ThreatAnalytics } from 'store/api'
+import { ThreatAnalytics } from 'types/analytics.types'
 
 const COLORS = {
   primary: '#3e3caa',

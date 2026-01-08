@@ -80,7 +80,7 @@ const Blacklist = () => {
         }}
         sortConfig={sortConfig}
       >
-        {data?.sort((a, b) => {
+        {data && [...data].sort((a, b) => {
           if (!sortConfig) return 0
           
           const { key, direction } = sortConfig

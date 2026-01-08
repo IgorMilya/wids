@@ -1,6 +1,3 @@
-import { api } from './api'
-
-//TODO
 export interface AnalyticsResponse {
   security_metrics: SecurityMetrics
   connection_stats: ConnectionStats
@@ -135,23 +132,4 @@ export interface TopSuspiciousNetwork {
   risk_score: string
   threat_count: number
 }
-
-export const analyticsApi = api.injectEndpoints({
-  endpoints: (builder) => ({
-    getAnalytics: builder.query<AnalyticsResponse, { threatDateFilter?: 'day' | 'week' | 'month' | 'year' | 'all' } | void>({
-      query: (params) => {
-        const queryParams = new URLSearchParams()
-        if (params?.threatDateFilter) {
-          queryParams.append('threat_date_filter', params.threatDateFilter)
-        }
-        const queryString = queryParams.toString()
-        return `/analytics${queryString ? `?${queryString}` : ''}`
-      },
-      providesTags: ['Analytics'],
-      keepUnusedDataFor: 300, 
-    }),
-  }),
-})
-
-export const { useGetAnalyticsQuery } = analyticsApi
 

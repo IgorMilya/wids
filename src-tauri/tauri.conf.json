@@ -5,7 +5,7 @@
   "identifier": "com.wips-ui.app",
   "build": {
     "beforeDevCommand": "npm run dev",
-    "devUrl": "https://wids.live",
+    "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },

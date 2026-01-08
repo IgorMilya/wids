@@ -1,9 +1,9 @@
 import React from 'react'
 import { Pie } from 'react-chartjs-2'
-import { SecurityMetrics } from 'store/api'
+import { SecurityMetrics } from 'types/analytics.types'
 
 const COLORS = {
-  success: '#22c55e',
+  success: '#4ade80',
   danger: '#ef4444',
 }
 

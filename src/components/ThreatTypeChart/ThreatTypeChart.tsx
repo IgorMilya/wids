@@ -1,7 +1,7 @@
 import React from 'react'
 import { Pie } from 'react-chartjs-2'
 import { Button } from 'UI'
-import { ThreatAnalytics } from 'store/api'
+import { ThreatAnalytics } from 'types/analytics.types'
 
 const COLORS = {
   danger: '#ef4444',

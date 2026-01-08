@@ -1,11 +1,11 @@
 import React from 'react'
 import { Pie } from 'react-chartjs-2'
-import { SecurityMetrics } from 'store/api'
+import { SecurityMetrics } from 'types/analytics.types'
 
 const COLORS = {
   highRisk: '#ef4444',
   mediumRisk: '#f59e0b',
-  lowRisk: '#10b981',
+  lowRisk: '#4ade80',
 }
 
 const pieChartOptions = {
@@ -51,21 +51,16 @@ interface RiskLevelChartProps {
 }
 
 export const RiskLevelChart = React.memo(({ securityMetrics }: RiskLevelChartProps) => {
-  const riskLevelData = [
-    securityMetrics.high_risk_connections,
-    securityMetrics.medium_risk_connections,
-    securityMetrics.low_risk_connections,
-  ].filter((val) => val > 0)
+  // Build data and labels arrays, preserving order and matching colors correctly
+  const riskLevelEntries = [
+    { label: 'High Risk', value: securityMetrics.high_risk_connections, color: COLORS.highRisk },
+    { label: 'Medium Risk', value: securityMetrics.medium_risk_connections, color: COLORS.mediumRisk },
+    { label: 'Low Risk', value: securityMetrics.low_risk_connections, color: COLORS.lowRisk },
+  ].filter((entry) => entry.value > 0)
 
-  const riskLevelLabels = [
-    'High Risk',
-    'Medium Risk',
-    'Low Risk',
-  ].filter((_, idx) => [
-    securityMetrics.high_risk_connections,
-    securityMetrics.medium_risk_connections,
-    securityMetrics.low_risk_connections,
-  ][idx] > 0)
+  const riskLevelData = riskLevelEntries.map((entry) => entry.value)
+  const riskLevelLabels = riskLevelEntries.map((entry) => entry.label)
+  const riskLevelColors = riskLevelEntries.map((entry) => entry.color)
 
   const chartData = React.useMemo(() => ({
     labels: riskLevelLabels,
@@ -73,20 +68,12 @@ export const RiskLevelChart = React.memo(({ securityMetrics }: RiskLevelChartPro
       {
         label: 'Risk Level Distribution',
         data: riskLevelData,
-        backgroundColor: [
-          COLORS.highRisk,
-          COLORS.mediumRisk,
-          COLORS.lowRisk,
-        ].slice(0, riskLevelData.length),
-        borderColor: [
-          COLORS.highRisk,
-          COLORS.mediumRisk,
-          COLORS.lowRisk,
-        ].slice(0, riskLevelData.length),
+        backgroundColor: riskLevelColors,
+        borderColor: riskLevelColors,
         borderWidth: 2,
       },
     ],
-  }), [riskLevelData, riskLevelLabels])
+  }), [riskLevelData, riskLevelLabels, riskLevelColors])
 
   if (riskLevelData.length === 0) {
     return (

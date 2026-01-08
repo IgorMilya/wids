@@ -357,7 +357,7 @@ export const createTourSteps = (
 
   tour.addStep({
     id: 'analytics-summary',
-    text: 'The Analytics Dashboard shows your Wi-Fi security statistics. The summary cards display: Total Scans, Successful Connections, High Risk Connections, and Unique Networks discovered.',
+    text: 'The Analytics Dashboard shows your Wi-Fi security statistics. The summary cards display: Total Scans, Successful Connections, High Risk Connections, and Networks in Lists (Blacklist + Whitelist).',
     attachTo: {
       element: '[data-tour="analytics-summary"]',
       on: 'bottom',

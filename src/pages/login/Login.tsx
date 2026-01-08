@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Form, Formik, FormikHelpers } from 'formik'
 import ReCAPTCHA from 'react-google-recaptcha'
-import { useLoginMutation } from 'store/api'
+import { useLoginMutation, api } from 'store/api'
 import { useDispatch } from 'react-redux'
 import { loginUser } from 'store/reducers/user.slice'
 import { ROUTES } from 'routes/routes.utils'
@@ -46,6 +46,9 @@ export const Login = () => {
       }).unwrap()
 
       console.log('Login response:', response)
+
+      // Reset RTK Query cache to ensure fresh data for the new user
+      dispatch(api.util.resetApiState())
 
       dispatch(
         loginUser({

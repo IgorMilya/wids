@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import { LinkItemType } from 'types'
 import { NavItem } from './nav-item'
 import { useSelector, useDispatch } from 'react-redux'
@@ -6,7 +6,7 @@ import { RootState } from 'store/store'
 import { logoutUser } from 'store/reducers/user.slice'
 import { useLocation, NavLink, useNavigate } from 'react-router-dom'
 import { ROUTES } from 'routes/routes.utils'
-import { useLogoutMutation } from 'store/api'
+import { useLogoutMutation, api } from 'store/api'
 import { Button } from 'UI'
 
 interface NavbarProps {
@@ -22,15 +22,20 @@ const Navbar: FC<NavbarProps> = ({ data }) => {
   const { pathname } = useLocation()
   const isProfileActive = pathname === ROUTES.PROFILE
   const [logout] = useLogoutMutation()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const handleLogout = async () => {
+    setIsLoggingOut(true)
     try {
       await logout({ refresh_token: refresh_token || undefined }).unwrap()
     } catch (error) {
       console.error('Failed to revoke refresh token on server:', error)
     } finally {
+      // Reset RTK Query cache to clear all cached data (blacklist, whitelist, etc.)
+      dispatch(api.util.resetApiState())
       dispatch(logoutUser())
       navigate(ROUTES.LOGIN)
+      setIsLoggingOut(false)
     }
   }
 
@@ -125,6 +130,7 @@ const Navbar: FC<NavbarProps> = ({ data }) => {
           <Button
             onClick={handleLogout}
             variant="outline"
+            disabled={isLoggingOut}
             className="!block !w-full !text-left !text-xs small-laptop:!text-sm normal-laptop:!text-[14px] !p-3 small-laptop:!p-[12px] normal-laptop:!p-[15px] !font-medium !transition !border-t !border-gray-700 !text-gray-300 hover:!bg-[rgba(255,255,255,0.1)] hover:!text-white !bg-transparent !justify-start !gap-2 !normal-laptop:w-full !large-laptop:w-full !wide-screen:w-full !small-laptop:w-full"
           >
             <svg
@@ -141,7 +147,7 @@ const Navbar: FC<NavbarProps> = ({ data }) => {
                 d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
               />
             </svg>
-            <span>Logout</span>
+            <span>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
           </Button>
         </>
       )}

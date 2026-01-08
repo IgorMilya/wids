@@ -51,6 +51,7 @@ const Profile: FC = () => {
   
   const [previousProfile, setPreviousProfile] = useState<typeof profile | null>(null)
   const [previousUsername, setPreviousUsername] = useState<string | null>(null)
+  const [isSavingProfile, setIsSavingProfile] = useState(false)
 
   useEffect(() => {
     if (profile) {
@@ -202,6 +203,7 @@ const Profile: FC = () => {
   }
 
   const handleSaveProfile = async () => {
+    setIsSavingProfile(true)
     try {
       const changedFields: string[] = []
       
@@ -320,6 +322,8 @@ const Profile: FC = () => {
         details: `Failed to update profile: ${error?.data?.error || error?.message || 'Unknown error'}`,
       }).catch(console.error)
       alert(`Failed to update profile: ${error?.data?.error || error?.message || 'Unknown error'}`)
+    } finally {
+      setIsSavingProfile(false)
     }
   }
 
@@ -608,8 +612,12 @@ const Profile: FC = () => {
               >
                 Reset to Show All Networks
               </Button>
-              <Button variant="secondary" onClick={handleSaveProfile}>
-                Save Profile Settings
+              <Button 
+                variant="secondary" 
+                onClick={handleSaveProfile}
+                disabled={isSavingProfile}
+              >
+                {isSavingProfile ? 'Saving...' : 'Save Profile Settings'}
               </Button>
             </div>
           </div>

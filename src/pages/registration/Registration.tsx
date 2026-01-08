@@ -5,6 +5,7 @@ import {
   useRegisterMutation,
   useVerifyEmailMutation,
   useResendVerificationMutation,
+  api,
 } from 'store/api'
 import { useDispatch } from 'react-redux'
 import { loginUser } from 'store/reducers/user.slice'
@@ -91,6 +92,9 @@ export const Registration = () => {
 
     try {
       const response = await verifyEmail({ email, code: values.code }).unwrap()
+
+      // Reset RTK Query cache to ensure fresh data for the new user
+      dispatch(api.util.resetApiState())
 
       dispatch(
         loginUser({

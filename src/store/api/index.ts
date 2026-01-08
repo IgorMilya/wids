@@ -19,4 +19,3 @@ export {
   type UserProfile,
   type UpdateProfileRequest,
 } from './profile.api'
-export { useGetAnalyticsQuery, type AnalyticsResponse, type SecurityMetrics, type ThreatAnalytics, type BlacklistWhitelistStats } from './analytics.api'

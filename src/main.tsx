@@ -4,6 +4,7 @@ import { Provider } from 'react-redux'
 import { AppRouter } from 'routes'
 import { store } from 'store'
 import { setTokens, logoutUser } from 'store/reducers/user.slice'
+import { api } from 'store/api'
 import './style/index.css'
 
 
@@ -13,6 +14,8 @@ window.addEventListener('tokensRefreshed', ((event: CustomEvent<{ token: string;
 }) as EventListener)
 
 window.addEventListener('authLogout', () => {
+  // Reset RTK Query cache to clear all cached data
+  store.dispatch(api.util.resetApiState())
   store.dispatch(logoutUser())
   window.location.href = '/login'
 })

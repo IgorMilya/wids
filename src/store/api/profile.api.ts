@@ -33,7 +33,7 @@ export const profile = api.injectEndpoints({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['Profile', 'Analytics'],
+      invalidatesTags: ['Profile'],
     }),
     changeUsername: builder.mutation<
       { status: string; username: string; token: string; refresh_token: string },
@@ -44,7 +44,7 @@ export const profile = api.injectEndpoints({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['Profile', 'Analytics'],
+      invalidatesTags: ['Profile'],
     }),
     changePassword: builder.mutation<
       { status: string },
@@ -55,7 +55,7 @@ export const profile = api.injectEndpoints({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['Analytics'],
+      invalidatesTags: ['Profile'],
     }),
   }),
 })
